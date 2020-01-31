@@ -58,7 +58,7 @@ Process key is a trigger key char, when compiler read to this key it will do som
 3. ' ' is finish command key and ready to input next command code.
 
 ## Keyword
-This going to be a bit long section but if you use to write dynamic method, I'm sure those key will look very familar.
+This going to be a bit long section but if you used to write dynamic method, I'm sure those key will look very familar.
 
 ### Math
 ```
@@ -116,4 +116,42 @@ u>:{number}
 u<:{number}
 u>=:{number}
 u<=:{number}
+```
+
+### Method invoke
+```
+use.{number} == invoke method{number}
+use-me == invoke this method aka recursion this method.
+
+used.{number} == invoke delegate; 
+Example,
+Function D(A As String, B As Func(Of String, Object)) B(A);
+D = "la.1 la.0 used.0".
+     compile(Of Func(Of String, Func(Of String, Object), Object).
+     used(Of Func(Of String, Object)).
+     fin()
+
+re == It's key use before 'use', 'use-me' or 'used' to do tail call, must not left anything on stack except method argument.
+Example,
+D = "la.1 la.0 re used.0".
+
+jmp.{number} == jump to method of 'use.{number}';
+Like 're', it do tall call too but doesn't need to place any argument on stack, it move current argument for target method.
+
+jmp-me == just jump loop back to current method to do tail call recursion.
+```
+
+### Array
+```
+nat.{number} == New array type{number}.
+len == Load array length.
+let.{number} == Load array element as type{number}.
+set.{number} == Store array element as type{number}.
+laet.{number} = Load address of type{number} from array element.
+```
+
+### Class & Field
+```
+new.{number} == new object type{number}.
+ldf.{number} == load field {number}.
 ```
