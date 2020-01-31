@@ -3,7 +3,7 @@
 Release : V.1 : .Net core 3.1
 
 
-## What's it do ?
+## What's this using for ?
 Dynamic compile a new method on runtime from string.
 
 ## Why not use `System.Reflection.Emit.ILGenerator` directly ?
@@ -275,3 +275,52 @@ Dim New_method As Delegate = "ils code".compile(Of Delegate).{Managed info input
 '// define pined local variant, be careful, it could lead to memory leak problem.
 .defu(Of T1, ..., T8)()
 ```
+
+## Number
+Anyone already forget we still has the last part ? don't worry me too...
+
+I think most of reader already guess what's number in this part using for, that right it use to tell compiler to pick info from data we get in section 'Managed info input from managed code'.
+
+### let write some dynamic method
+
+```vb
+Dim Find = "la.1 .1 - sa.1 la.1 .0 <:0 la.3 la.0 la.1 let.0 la.2 used.0 t:0 jmp-me :0 la.1".
+            compile(Of Func(Of T(), Int32, Int32, Func(Of Int32, Int32, Boolean))).
+            type(Of Int32).
+            used(Of Func(Of Int32, Int32, Boolean)).
+            fin
+
+Dim Where_is_7 = Find({9, 8, 7, 6, 5}, 5, 7, Function(R, L) R = L) 
+```
+From the name of example function, of course this is simple function for find target element in array but how much you undestand it ?
+
+#### Let's break it down!
+
+`la.1` is `load argument index 1`, when we look at `Where_is_7` line, arg1 is `5`.
+
+`.1` is put number `1` into stack and then we `-` them, so now `5` and `1` are gone but! we get `4` back instead.
+
+`sa.1` now, we sent our `4` to store back at arg1 ... well, I just explain `arg1 -= 1` for 3 lines(maybe I should write some book XD).
+
+Then what's about this `la.1 .0 <:0` ? it's load arg1(our `4`) back into stack and put `0` too and most of the time we put any int with 0 is when we compare and branching code!
+
+`<:0` is if previous less then last on stack just go to label `0`, of couse our `4` is more then `0` so we move to next keyword.
+
+Next is `la.3 la.0 la.1 let.0 la.2 used.0 t:0` !
+
+Reader : Wait! you can get your OT, just slow down!
+
+Don't worry, I need to bring entire part; let skip `la.3` and look at `la.0`, arg0 is `{9, 8, 7, 6, 5}` and we reload arg1 our `4` back then we `let.0` it, L.E.T is `load element type` and `.type(0)` is `Int32`, so we can rearrange it as `arg0 index 4 load element type Int32` and now we just get `arg0(arg1)` value, it's `5`!
+
+Now `la.0 la.1 let.0` is gone, let replace it with 5 then we got this `la.3 .5 la.2 used.0 t:0`.
+
+`la.3` is delegate so when we use keyword `used.0` we invoke delegate index 0 from `.used(Of Func(Of Int32, Int32, Boolean))` and `arg2` is 7 so it become `arg3(5, 7)` then we move to `Function(R, L) R = L)` and we got compare result `5 = 7` back to our method.
+
+After we get our spoil back, `t:0` knock our door and ask did we `true` back ? of couse not, so we move to `jmp-me` be dejavu again but this time our `arg1` is `4` from the last time we store it and then the story continue, again and again until we got `true` for `t:0` or our `arg1` worthless then `0`.
+
+But even if we finally reach `:0` label number 0 we try to reach for so long, `la.1` mostly be `-1`, a value less then `0`.
+
+#### Reader : Wait! where are `return`!  I never find any `;` in the code.
+
+ILS always add `return` or `;` at last key also `jmp` and `jmp-me` are special, those 2 never need to return because they jump foward, not return back.
+
