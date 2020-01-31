@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace></RootNamespace>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <StartupObject />
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Authors>Richter</Authors>
+    <Company>RevensofT</Company>
+  </PropertyGroup>
+  <ItemGroup>
+    <Import Include="int = System.Int64" />
+    <Import Include="uint = System.UInt64" />
+    <Import Include="Extension = System.Runtime.CompilerServices.ExtensionAttribute" />
+    <Import Include="Method = System.Runtime.CompilerServices.MethodImplAttribute" />
+    <Import Include="sre = System.Reflection.Emit" />
+    <Import Include="sr = System.Reflection" />
+    <Import Include="op = System.Reflection.Emit.OpCodes" />
+  </ItemGroup>
+
+</Project>
