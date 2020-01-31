@@ -326,7 +326,7 @@ ILS always add `return` or `;` at last key also `jmp` and `jmp-me` are special, 
 
 #### Reader : What's about `tail call` or that `re use` ?
 
-The need to `return` as other `call` but just in formal, they never return back too, let's me replace `jmp` to `re use` for example.
+They need to `return` as other `call` but just in formal, they never return back too, let's me replace `jmp` to `re use` for example.
 
 `la.1 .1 - sa.1 la.1 .0 <:0 la.3 la.0 la.1 let.0 la.2 used.0 t:0 la.0 la.1 la.2 la.3 re use-me ; :0 la.1`
 
@@ -367,3 +367,7 @@ Never be too greedy, cut too much corner is dangerous.
 Somebody passby : Hey you, did you just teach people to abuse your own code bug !?
 
 Ok everyone, hope ILS make your quality of life on coding better and hope my code get into `GitHub Arctic Code Vault` XD.
+
+#### Reader : Wait!! why you always put `.` before int32 you put into code ?
+
+Oh, please forgive me, I forgot to tell that any character is key if you just put `1` without ` ` and `.` before it, compiler will see it as keyword instead number and throw an error `Unknow keyword` back.
