@@ -159,9 +159,9 @@ sf.{number} == store field {number}.
 laf.{number} == load address of field {number}.
 
 //for static field
-ldsf.{number}
-stsf.{number}
-lasf.{number}
+lsf.{number}
+ssf.{number}
+lsf.{number}
 ```
 
 ### Pointer
