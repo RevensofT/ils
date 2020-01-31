@@ -346,7 +346,7 @@ ILS has a feature call `Continuum of keyword` so I can rewrite `tail call` Find 
 
 Reader : Much shoter but how ?
 
-From `Process key`#2 when `.` 2nd time without ` ` before it, compiler will excute the same keyword with new number.
+From `Process key`#2 when `.` 2nd time without `' '` before it, compiler will excute the same keyword with new number.
 
 Reader : Can I do it with keyword ?
 
@@ -360,7 +360,7 @@ As you wish !
 
 #### Reader : Huh, why `la.3.0.1` still has 0 on it ? should it be `la3..1` ?
 
-#### No, it shouldn't, don't forget only after key ` ` reset number back to 0; if you write like that it will be `la3.3.1` instead!
+#### No, it shouldn't, don't forget only after key `' '` reset number back to 0; if you write like that it will be `la3.3.1` instead!
 
 Never be too greedy, cut too much corner is dangerous.
 
@@ -370,4 +370,4 @@ Ok everyone, hope ILS make your quality of life on coding better and hope my cod
 
 #### Reader : Wait!! why you always put `.` before int32 you put into code ?
 
-Oh, please forgive me, I forgot to tell that any character is key if you just put `1` without ` ` and `.` before it, compiler will see it as keyword instead number and throw an error `Unknow keyword` back.
+Oh, please forgive me, I forgot to tell that any character is key if you just put `1` without `' '` and `.` before it, compiler will see it as keyword instead number and throw an error `Unknow keyword` back.
