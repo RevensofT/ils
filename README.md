@@ -92,11 +92,11 @@ Local and Argument.
 ```
 lo.{number} == Load local variant {number}.
 so.{number} == Store local variant {number}.
-lao.{number} == Load address of local variant {number}
+lao.{number} == Load address of local variant {number}.
 
 la.{number} == Load method argument {number}.
 sa.{number} == Store method argument {number}.
-laa.{number} == Load address of method argument {number}
+laa.{number} == Load address of method argument {number}.
 ```
 Branch
 ```
@@ -152,6 +152,64 @@ laet.{number} = Load address of type{number} from array element.
 
 ### Class & Field
 ```
-new.{number} == new object type{number}.
-ldf.{number} == load field {number}.
+new.{number} == new object type{number}, like 'use' put all argument for it befor this keyword.
+
+lf.{number} == load field {number}.
+sf.{number} == store field {number}.
+laf.{number} == load address of field {number}.
+
+//for static field
+ldsf.{number}
+stsf.{number}
+lasf.{number}
+```
+
+### Pointer
+```
+lot.{number} == Load object type{number} from address.
+sot.{number} == Store object type{number} to address.
+
+[shortcut for primitive type]
+li == load native int.
+li1
+li2
+li4 == load int32.
+li8
+
+lu == load unsign native int.
+lu1
+lu2
+lu4
+
+lr4
+lr8 == load float64(double).
+
+si == store native int.
+si1
+si2
+si4
+si8
+
+su
+
+sr4
+sr8
+```
+
+### Convert type
+```
+cot.{number} == Convert to type{number}
+ci == convert to native int.
+ci1
+ci2
+ci4 == convert to int32.
+ci8
+
+cu == convert to unsign native int.
+cu1
+cu2
+cu4
+
+cr4
+cr8 == convert to float64(double).
 ```
