@@ -233,3 +233,45 @@ inib == initialize value to a block of byte.
 [-] == pop, delete last value on stack.
 [n] == alloc dynamic memory pool, must not left anything on stack except byte size to alloc, auto free when end method.
 ```
+### Managed info input
+```
+i4.{number} == Input int32 number from {number} index of '.i4(int32())'.
+i8.{number}
+r4.{number}
+r8.{number}
+txt.{number}
+```
+### Managed info input from managed code
+They are instance method for input info from managed code to dynamic method.
+```vb
+Dim New_method As Delegate = "ils code".compile(Of Delegate).{Managed info input}.fin()
+```
+
+```vb
+.i4(ParamArray Input() As Integer)
+.i8(ParamArray Input() As Long)
+.r4(ParamArray Input() As Single)
+.r8(ParamArray Input() As Double)
+.txt(ParamArray Input() As String)
+
+.field(ParamArray Input() As FieldInfo)
+.use(ParamArray Input() As MethodInfo)
+.new(ParamArray Input() As ConstructorInfo)
+.type(ParamArray Input() As System.Type)
+
+'// define local variant.
+.def(ParamArray Input() As Type)
+```
+
+#### Quality of life
+```vb
+.field(Of T1, ..., T8)(Name1 As String, ..., Name8 As String)
+.used(Of T1 As Class, ..., T8 As Class)()
+.new(Of T1, ..., T8)()
+.type(Of T1, ..., T8)()
+
+.def(Of T1, ..., T8)()
+
+'// define pined local variant, be careful, it could lead to memory leak problem.
+.defu(Of T1, ..., T8)()
+```
