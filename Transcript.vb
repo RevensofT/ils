@@ -147,10 +147,10 @@ Namespace ILS
                     Case (AscW("*"c) << 8) + AscW("*"c)
                         .Emit(op.Dup)
                         .Emit(op.Mul)
-                    Case (AscW("*"c) << 8) + AscW("-"c)
+                    Case (AscW("-"c) << 8) + AscW("*"c)
                         .Emit(op.Ldc_I4_M1)
                         .Emit(op.Mul)
-                    Case (AscW("/"c) << 8) + AscW("-"c)
+                    Case (AscW("-"c) << 8) + AscW("/"c)
                         .Emit(op.Ldc_I4_M1)
                         .Emit(op.Div)
 
@@ -201,7 +201,7 @@ Namespace ILS
                         .Emit(op.Bne_Un, lbl(num))
                     Case (AscW("u"c) << 8 * 2) + (AscW(">"c) << 8) + AscW(":"c)
                         .Emit(op.Bgt_Un, lbl(num))
-                    Case (AscW("u"c) << 8 * 2) + (AscW(","c) << 8) + AscW(":"c)
+                    Case (AscW("u"c) << 8 * 2) + (AscW("<"c) << 8) + AscW(":"c)
                         .Emit(op.Blt_Un, lbl(num))
                     Case (AscW("u"c) << 8 * 3) + (AscW(">"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c)
                         .Emit(op.Bge_Un, lbl(num))
@@ -227,7 +227,7 @@ Namespace ILS
                         .Emit(op.Jmp, meth)
 
                         'Load constant data
-                    Case (AscW("T"c) << 8 * 2) + (AscW("x"c) << 8) + AscW("t"c)
+                    Case (AscW("t"c) << 8 * 2) + (AscW("x"c) << 8) + AscW("t"c)
                         .Emit(op.Ldstr, txts(num))
                     Case (AscW("i"c) << 8) + AscW("4"c)
                         .Emit(op.Ldc_I4, i4s(num))
