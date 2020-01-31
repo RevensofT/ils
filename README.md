@@ -54,8 +54,8 @@ ils syntax code is very simple, it has only 3 key.
 ## Process key
 Process key is a trigger key char, when compiler read to this key it will do some compile, only 3 keys use in ils 1.0.
 1. ':' is key to tell compiler code about to be branch like if, do, for or goto.
-2. '.' is key to tell compiler after this char going to be int32 number.
-3. ' ' is finish command key and ready to input next command code.
+2. '.' is key to tell compiler after this char going to be int32 number and ready to excute command key next time, number will be reset when next char is number.
+3. ' ' is excution command key, reset keyword and number back to 0, ready to input next command code.
 
 ## Keyword
 This going to be a bit long section but if you used to write dynamic method, I'm sure those key will look very familar.
@@ -304,7 +304,7 @@ From the name of example function, of course this is simple function for find ta
 
 Then what's about this `la.1 .0 <:0` ? it's load arg1(our `4`) back into stack and put `0` too and most of the time we put any int with 0 is when we compare and branching code!
 
-`<:0` is if previous less then last on stack just go to label `0`, of couse our `4` is more then `0` so we move to next keyword.
+`<:0` is if previous less then last on stack just go to label `0`, of course our `4` is more then `0` so we move to next keyword.
 
 Next is `la.3 la.0 la.1 let.0 la.2 used.0 t:0` !
 
@@ -316,11 +316,54 @@ Now `la.0 la.1 let.0` is gone, let replace it with 5 then we got this `la.3 .5 l
 
 `la.3` is delegate so when we use keyword `used.0` we invoke delegate index 0 from `.used(Of Func(Of Int32, Int32, Boolean))` and `arg2` is 7 so it become `arg3(5, 7)` then we move to `Function(R, L) R = L)` and we got compare result `5 = 7` back to our method.
 
-After we get our spoil back, `t:0` knock our door and ask did we `true` back ? of couse not, so we move to `jmp-me` be dejavu again but this time our `arg1` is `4` from the last time we store it and then the story continue, again and again until we got `true` for `t:0` or our `arg1` worthless then `0`.
+After we get our spoil back, `t:0` knock our door and ask did we `true` back ? of course not, so we move to `jmp-me` be dejavu again but this time our `arg1` is `4` from the last time we store it and then the story continue, again and again until we got `true` for `t:0` or our `arg1` worthless then `0`.
 
 But even if we finally reach `:0` label number 0 we try to reach for so long, `la.1` mostly be `-1`, a value less then `0`.
 
-#### Reader : Wait! where are `return`!  I never find any `;` in the code.
+#### Reader : Wait! where is `return`!  I never find any `;` in the code.
 
 ILS always add `return` or `;` at last key also `jmp` and `jmp-me` are special, those 2 never need to return because they jump foward, not return back.
 
+#### Reader : What's about `tail call` or that `re use` ?
+
+The need to `return` as other `call` but just in formal, they never return back too, let's me replace `jmp` to `re use` for example.
+
+`la.1 .1 - sa.1 la.1 .0 <:0 la.3 la.0 la.1 let.0 la.2 used.0 t:0 la.0 la.1 la.2 la.3 re use-me ; :0 la.1`
+
+Reader : The code is so long for no reason.
+
+Yep but `jmp` sometime has issue with generic method and `tail call` is much friendly to VS stack tracer then `jmp`.
+
+Reader : But the code is...
+
+No need to worry because it's time for....
+
+## Quality of life(syntax)
+
+ILS has a feature call `Continuum of keyword` so I can rewrite `tail call` Find method like this.
+
+`la.1 .1 - sa.1 la.1 .0 <:0 la.3.0.1 let.0 la.2 used.0 t:0 la.0.1.2.3 re use-me ; :0 la.1`
+
+Reader : Much shoter but how ?
+
+From `Process key`#2 when `.` 2nd time without ` ` before it, compiler will excute the same keyword with new number.
+
+Reader : Can I do it with keyword ?
+
+Of course !
+`la.1 .1 - sa.1.la .0 <:0 la.3.0.1 let.0 la.2 used.0 t:0 la.0.1.2.3 re use-me ; :0 la.1`
+
+Reader : Wait, `Process key`#3 said key and number will reset to 0 so ... can I get rid of 0 !?
+
+As you wish !
+`la.1 .1 - sa.1.la . <: la.3.0.1 let la.2 used t: la..1.2.3 re use-me ; : la.1`
+
+#### Reader : Huh, why `la.3.0.1` still has 0 on it ? should it be `la3..1` ?
+
+#### No, it shouldn't, don't forget only after key ` ` reset number back to 0; if you write like that it will be `la3.3.1` instead!
+
+Never be too greedy, cut too much corner is dangerous.
+
+Somebody passby : Hey you, did you just teach people to abuse your own code bug !?
+
+Ok everyone, hope ILS make your quality of life on coding better and hope my code get into `GitHub Arctic Code Vault` XD.
