@@ -88,7 +88,7 @@ This going to be a bit long section but if you used to write dynamic method, I'm
 = equal
 ```
 
-Local and Argument.
+### Local and Argument.
 ```
 lo.{number} == Load local variant {number}.
 so.{number} == Store local variant {number}.
@@ -98,7 +98,7 @@ la.{number} == Load method argument {number}.
 sa.{number} == Store method argument {number}.
 laa.{number} == Load address of method argument {number}.
 ```
-Branch
+### Branch
 ```
 :{number} label{number}
 ::{number} goto label{number}
@@ -212,4 +212,24 @@ cu4
 
 cr4
 cr8 == convert to float64(double).
+```
+
+### Memory managed
+```
+mt.{number} == mass(size) of type{number}
+
+cpyt.{number} == copy type{number} to target from source.
+init.{number} == initialize value type{number}
+
+cpyb == copy a block of byte.
+inib == initialize value to a block of byte.
+```
+
+### General
+```
+; == ret aka return.
+!! == break, for debuging.
+[+] == dup aka duplicate last value on stack.
+[-] == pop, delete last value on stack.
+[n] == alloc dynamic memory pool, must not left anything on stack except byte size to alloc, auto free when end method.
 ```
