@@ -78,6 +78,7 @@ Namespace ILS
                     key = 0
                     num = 0
                     is_input = False
+                    is_input_gen = False
                 Case Else
                     If is_input Then numbering(I) Else key = (key << 8) + I 'key <<= 8 : key += I
             End Select
@@ -88,7 +89,7 @@ Namespace ILS
             If Input > 47 And Input < 58 Then
                 If is_input_gen Then num = 0 : is_input_gen = False
                 num = Input - 48 + num * 10
-            ElseIf Input = AscW(":"c) Then ' :: == goto target label
+            ElseIf key = AscW(":"c) And Input = AscW(":"c) Then ' :: == goto target label
                 key = (key << 8) + key
             Else 'la.1.2.sa == la.1 la.2 sa.2
                 is_input = False
