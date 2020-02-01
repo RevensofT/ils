@@ -13,21 +13,27 @@
                                                                   End With
                                                               End Function()
 
+        <Method(inline)>
         Public Shared Function create_method() As sre.DynamicMethod
             Return New sre.DynamicMethod("", return_type, param_types, app)
         End Function
+        <Method(inline)>
         Public Shared Function create_method(Name As String) As sre.DynamicMethod
             Return New sre.DynamicMethod(Name, return_type, param_types, app)
         End Function
+        <Method(inline)>
         Public Shared Function create_method(Assembly_module As sr.Module) As sre.DynamicMethod
             Return New sre.DynamicMethod("", return_type, param_types, Assembly_module)
         End Function
+        <Method(inline)>
         Public Shared Function create_method(Name As String, Assembly_module As sr.Module) As sre.DynamicMethod
             Return New sre.DynamicMethod(Name, return_type, param_types, Assembly_module)
         End Function
+        <Method(inline)>
         Public Shared Function create_method(Base_class As System.Type) As sre.DynamicMethod
             Return New sre.DynamicMethod("", return_type, param_types, Base_class)
         End Function
+        <Method(inline)>
         Public Shared Function create_method(Name As String, Base_class As System.Type) As sre.DynamicMethod
             Return New sre.DynamicMethod(Name, return_type, param_types, Base_class)
         End Function
