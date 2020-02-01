@@ -1,6 +1,8 @@
 # ILS - Intermediate Language Script
 
-Release : V.1 : .Net core 3.1
+#### Release : V.1 : .Net core 3.1
+
+#### Relate project : [Extend standard library](https://github.com/RevensofT/exs) (You can use it as example code, I write it with ILS.)
 
 
 ## What's this using for ?
