@@ -23,7 +23,7 @@ Dim New_method As Delegate = "ils code".compile(Of Delegate).{Managed info input
 ```
 #### If you can't use extension method with generic type.
 ```C#
-Delegate New_method = compile(Of Delegate)("ils code).{Managed info input}.fin()"
+Delegate New_method = compile(Of Delegate)("ils code").{Managed info input}.fin()
 ```
 
 ## What's 'Managed info input' ?
