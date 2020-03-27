@@ -3,69 +3,6 @@ Imports cil = System.Reflection.Emit.ILGenerator
 
 Namespace ILS
 
-    'Friend Structure pre(Of T, V)
-    '    '"la.2.0.1 used f: la ; : la.3.0.1 used.1 la.1.2.3 re use-me"
-    '    Friend Shared _do As Func(Of T, V, Func(Of T, V, Boolean), Func(Of T, V, T), T) =
-    '        Function()
-    '            Dim Method = Info.delegate(Of Func(Of T, V, Func(Of T, V, Boolean), Func(Of T, V, T), T)).create_method
-    '            With Method.GetILGenerator
-    '                .Emit(op.Ldarg_2)
-    '                .Emit(op.Ldarg_0)
-    '                .Emit(op.Ldarg_1)
-    '                .Emit(op.Call, Info.delegate(Of Func(Of T, V, Boolean)).invoker)
-
-    '                Dim LB = .DefineLabel
-    '                .Emit(op.Brfalse_S, LB)
-    '                .Emit(op.Ldarg_0)
-    '                .Emit(op.Ret)
-    '                .MarkLabel(LB)
-
-    '                .Emit(op.Ldarg_3)
-    '                .Emit(op.Ldarg_0)
-    '                .Emit(op.Ldarg_1)
-    '                .Emit(op.Call, Info.delegate(Of Func(Of T, V, T)).invoker)
-
-    '                .Emit(op.Ldarg_1)
-    '                .Emit(op.Ldarg_2)
-    '                .Emit(op.Ldarg_3)
-    '                .Emit(op.Tailcall)
-    '                .Emit(op.Call, Method)
-    '                .Emit(op.Ret)
-    '            End With
-    '            Return DirectCast(Method.CreateDelegate(GetType(Func(Of T, V, Func(Of T, V, Boolean), Func(Of T, V, T), T))), Object)
-    '        End Function()
-    'End Structure
-
-    ''"la.1.0 used f: la ; : la.2.0 used.1 la.1.2 re use-me"
-    'Friend Structure pre(Of T)
-    '    Friend Shared _do As Func(Of T, Func(Of T, Boolean), Func(Of T, T), T) =
-    '        Function()
-    '            Dim Method = Info.delegate(Of Func(Of T, Func(Of T, Boolean), Func(Of T, T), T)).create_method
-    '            With Method.GetILGenerator
-    '                .Emit(op.Ldarg_1)
-    '                .Emit(op.Ldarg_0)
-    '                .Emit(op.Call, Info.delegate(Of Func(Of T, Boolean)).invoker)
-
-    '                Dim LB = .DefineLabel
-    '                .Emit(op.Brfalse_S, LB)
-    '                .Emit(op.Ldarg_0)
-    '                .Emit(op.Ret)
-    '                .MarkLabel(LB)
-
-    '                .Emit(op.Ldarg_2)
-    '                .Emit(op.Ldarg_0)
-    '                .Emit(op.Call, Info.delegate(Of Func(Of T, T)).invoker)
-
-    '                .Emit(op.Ldarg_1)
-    '                .Emit(op.Ldarg_2)
-    '                .Emit(op.Tailcall)
-    '                .Emit(op.Call, Method)
-    '                .Emit(op.Ret)
-    '            End With
-    '            Return DirectCast(Method.CreateDelegate(GetType(Func(Of T, Func(Of T, Boolean), Func(Of T, T), T))), Object)
-    '        End Function()
-    'End Structure
-
     Public Module Builder
         '<Extension, Method(inline)>
         'Public Function [do](Of V, S)(Variant_data As V, Static_data As S,
