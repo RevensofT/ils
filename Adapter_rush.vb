@@ -36,9 +36,6 @@
                     Dim D1 = $"Func(Of {T0}, T{i})"
                     Dim D2 = $"({D1}, T{i})"
 
-                    '[sub] = New ils(Of Action(Of {T0}))(Script, Info.delegate(Of Action(Of {T0})).create_method).type(Of {T0}).fin
-                    'func.method = New ils(Of {D1})(Script, Info.delegate(Of {D1}).create_method).type(Of {T0}).fin
-
                     Diagnostics.Debug.WriteLine(.Clear.Append($"
         <Extension, Method(inline)>
         Public Function [sub](Of {T0})(Script As String, {T1}) As Action(Of {T0})
