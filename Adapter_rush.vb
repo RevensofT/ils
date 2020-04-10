@@ -36,11 +36,14 @@
                     Dim D1 = $"Func(Of {T0}, T{i})"
                     Dim D2 = $"({D1}, T{i})"
 
+                    '[sub] = New ils(Of Action(Of {T0}))(Script, Info.delegate(Of Action(Of {T0})).create_method).type(Of {T0}).fin
+                    'func.method = New ils(Of {D1})(Script, Info.delegate(Of {D1}).create_method).type(Of {T0}).fin
+
                     Diagnostics.Debug.WriteLine(.Clear.Append($"
         <Extension, Method(inline)>
-        Public Function [sub](Of {T0})(Script As String, {T1}) As Action(Of {T0})
-            [sub] = New ils(Of Action(Of {T0}))(Script).create_method).type(Of {T0}).fin
-            [sub].Invoke({T2})
+        Public Function [sub](Of {T0})(Script As String, {T1}) As incident(Of {T0})
+            [sub] = New ils(Of Action(Of {T0}))(Script).type(Of {T0}).fin
+            [sub].method({T2})
         End Function
 
         <Extension, Method(inline)>
@@ -57,15 +60,16 @@
     Partial Public Module Adapter
 
         <Extension, Method(inline)>
-        Public Function [sub](Script As String) As Action
+        Public Function [sub](Script As String) As incident
             [sub] = New ils(Of Action)(Script).fin
-            [sub].Invoke()
+            [sub].method()
         End Function
 
+
         <Extension, Method(inline)>
-        Public Function [sub](Of T1)(Script As String, Arg1 As T1) As Action(Of T1)
+        Public Function [sub](Of T1)(Script As String, Arg1 As T1) As incident(Of T1)
             [sub] = New ils(Of Action(Of T1))(Script).type(Of T1).fin
-            [sub].Invoke(Arg1)
+            [sub].method(Arg1)
         End Function
 
         <Extension, Method(inline)>
@@ -75,9 +79,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2)(Script As String, Arg1 As T1, Arg2 As T2) As Action(Of T1, T2)
+        Public Function [sub](Of T1, T2)(Script As String, Arg1 As T1, Arg2 As T2) As incident(Of T1, T2)
             [sub] = New ils(Of Action(Of T1, T2))(Script).type(Of T1, T2).fin
-            [sub].Invoke(Arg1, Arg2)
+            [sub].method(Arg1, Arg2)
         End Function
 
         <Extension, Method(inline)>
@@ -87,9 +91,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3) As Action(Of T1, T2, T3)
+        Public Function [sub](Of T1, T2, T3)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3) As incident(Of T1, T2, T3)
             [sub] = New ils(Of Action(Of T1, T2, T3))(Script).type(Of T1, T2, T3).fin
-            [sub].Invoke(Arg1, Arg2, Arg3)
+            [sub].method(Arg1, Arg2, Arg3)
         End Function
 
         <Extension, Method(inline)>
@@ -99,9 +103,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4) As Action(Of T1, T2, T3, T4)
+        Public Function [sub](Of T1, T2, T3, T4)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4) As incident(Of T1, T2, T3, T4)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4))(Script).type(Of T1, T2, T3, T4).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4)
+            [sub].method(Arg1, Arg2, Arg3, Arg4)
         End Function
 
         <Extension, Method(inline)>
@@ -111,9 +115,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4, T5)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5) As Action(Of T1, T2, T3, T4, T5)
+        Public Function [sub](Of T1, T2, T3, T4, T5)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5) As incident(Of T1, T2, T3, T4, T5)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4, T5))(Script).type(Of T1, T2, T3, T4, T5).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4, Arg5)
+            [sub].method(Arg1, Arg2, Arg3, Arg4, Arg5)
         End Function
 
         <Extension, Method(inline)>
@@ -123,9 +127,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4, T5, T6)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6) As Action(Of T1, T2, T3, T4, T5, T6)
+        Public Function [sub](Of T1, T2, T3, T4, T5, T6)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6) As incident(Of T1, T2, T3, T4, T5, T6)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4, T5, T6))(Script).type(Of T1, T2, T3, T4, T5, T6).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6)
+            [sub].method(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6)
         End Function
 
         <Extension, Method(inline)>
@@ -135,9 +139,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7) As Action(Of T1, T2, T3, T4, T5, T6, T7)
+        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7) As incident(Of T1, T2, T3, T4, T5, T6, T7)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4, T5, T6, T7))(Script).type(Of T1, T2, T3, T4, T5, T6, T7).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7)
+            [sub].method(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7)
         End Function
 
         <Extension, Method(inline)>
@@ -147,9 +151,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8) As Action(Of T1, T2, T3, T4, T5, T6, T7, T8)
+        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8) As incident(Of T1, T2, T3, T4, T5, T6, T7, T8)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4, T5, T6, T7, T8))(Script).type(Of T1, T2, T3, T4, T5, T6, T7, T8).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8)
+            [sub].method(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8)
         End Function
 
         <Extension, Method(inline)>
@@ -159,9 +163,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9) As Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9)
+        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9) As incident(Of T1, T2, T3, T4, T5, T6, T7, T8, T9)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9))(Script).type(Of T1, T2, T3, T4, T5, T6, T7, T8, T9).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9)
+            [sub].method(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9)
         End Function
 
         <Extension, Method(inline)>
@@ -171,9 +175,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10) As Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
+        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10) As incident(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10))(Script).type(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10)
+            [sub].method(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10)
         End Function
 
         <Extension, Method(inline)>
@@ -183,9 +187,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10, Arg11 As T11) As Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)
+        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10, Arg11 As T11) As incident(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11))(Script).type(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11)
+            [sub].method(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11)
         End Function
 
         <Extension, Method(inline)>
@@ -195,9 +199,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10, Arg11 As T11, Arg12 As T12) As Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12)
+        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10, Arg11 As T11, Arg12 As T12) As incident(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12))(Script).type(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12)
+            [sub].method(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12)
         End Function
 
         <Extension, Method(inline)>
@@ -207,9 +211,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10, Arg11 As T11, Arg12 As T12, Arg13 As T13) As Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)
+        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10, Arg11 As T11, Arg12 As T12, Arg13 As T13) As incident(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13))(Script).type(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12, Arg13)
+            [sub].method(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12, Arg13)
         End Function
 
         <Extension, Method(inline)>
@@ -219,9 +223,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10, Arg11 As T11, Arg12 As T12, Arg13 As T13, Arg14 As T14) As Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14)
+        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10, Arg11 As T11, Arg12 As T12, Arg13 As T13, Arg14 As T14) As incident(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14))(Script).type(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12, Arg13, Arg14)
+            [sub].method(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12, Arg13, Arg14)
         End Function
 
         <Extension, Method(inline)>
@@ -231,9 +235,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10, Arg11 As T11, Arg12 As T12, Arg13 As T13, Arg14 As T14, Arg15 As T15) As Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15)
+        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10, Arg11 As T11, Arg12 As T12, Arg13 As T13, Arg14 As T14, Arg15 As T15) As incident(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15))(Script).type(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12, Arg13, Arg14, Arg15)
+            [sub].method(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12, Arg13, Arg14, Arg15)
         End Function
 
         <Extension, Method(inline)>
@@ -243,9 +247,9 @@
         End Function
 
         <Extension, Method(inline)>
-        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10, Arg11 As T11, Arg12 As T12, Arg13 As T13, Arg14 As T14, Arg15 As T15, Arg16 As T16) As Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16)
+        Public Function [sub](Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16)(Script As String, Arg1 As T1, Arg2 As T2, Arg3 As T3, Arg4 As T4, Arg5 As T5, Arg6 As T6, Arg7 As T7, Arg8 As T8, Arg9 As T9, Arg10 As T10, Arg11 As T11, Arg12 As T12, Arg13 As T13, Arg14 As T14, Arg15 As T15, Arg16 As T16) As incident(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16)
             [sub] = New ils(Of Action(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16))(Script).type(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16).fin
-            [sub].Invoke(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12, Arg13, Arg14, Arg15, Arg16)
+            [sub].method(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12, Arg13, Arg14, Arg15, Arg16)
         End Function
 
         <Extension, Method(inline)>
@@ -253,6 +257,7 @@
             func.method = New ils(Of Func(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T16))(Script).type(Of T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16).fin
             func.result = func.method(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12, Arg13, Arg14, Arg15, Inintialize_output)
         End Function
+
 
     End Module
 End Namespace
