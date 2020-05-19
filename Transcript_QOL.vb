@@ -231,80 +231,80 @@
 #Region "delegates"
         <Method(inline)>
         Public Function used(Of T1 As Class)() As ils(Of T)
-            'useds = {Info.delegate(Of T1).invoker, Info.delegate(Of T2).invoker}
-            With New List(Of sr.MethodInfo)(useds)
-                .Add(Info.delegate(Of T1).invoker)
-                useds = .ToArray
-            End With
+            useds = {Info.delegate(Of T1).invoker}
+            'With New List(Of sr.MethodInfo)(useds)
+            '    .Add(Info.delegate(Of T1).invoker)
+            '    useds = .ToArray
+            'End With
             Return Me
         End Function
         <Method(inline)>
         Public Function used(Of T1 As Class, T2 As Class)() As ils(Of T)
-            'useds = {Info.delegate(Of T1).invoker, Info.delegate(Of T2).invoker}
-            With New List(Of sr.MethodInfo)(useds)
-                .AddRange({Info.delegate(Of T1).invoker, Info.delegate(Of T2).invoker})
-                useds = .ToArray
-            End With
+            useds = {Info.delegate(Of T1).invoker, Info.delegate(Of T2).invoker}
+            'With New List(Of sr.MethodInfo)(useds)
+            '    .AddRange({Info.delegate(Of T1).invoker, Info.delegate(Of T2).invoker})
+            '    useds = .ToArray
+            'End With
             Return Me
         End Function
 
         <Method(inline)>
         Public Function used(Of T3 As Class, T2 As Class, T1 As Class)() As ils(Of T)
-            'useds = {Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker}
-            With New List(Of sr.MethodInfo)(useds)
-                .AddRange({Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker})
-                useds = .ToArray
-            End With
+            useds = {Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker}
+            'With New List(Of sr.MethodInfo)(useds)
+            '    .AddRange({Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker})
+            '    useds = .ToArray
+            'End With
             Return Me
         End Function
 
         <Method(inline)>
         Public Function used(Of T4 As Class, T3 As Class, T2 As Class, T1 As Class)() As ils(Of T)
-            'useds = {Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker}
-            With New List(Of sr.MethodInfo)(useds)
-                .AddRange({Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker})
-                useds = .ToArray
-            End With
+            useds = {Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker}
+            'With New List(Of sr.MethodInfo)(useds)
+            '    .AddRange({Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker})
+            '    useds = .ToArray
+            'End With
             Return Me
         End Function
 
         <Method(inline)>
         Public Function used(Of T5 As Class, T4 As Class, T3 As Class, T2 As Class, T1 As Class)() As ils(Of T)
-            'useds = {Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker}
-            With New List(Of sr.MethodInfo)(useds)
-                .AddRange({Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker})
-                useds = .ToArray
-            End With
+            useds = {Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker}
+            'With New List(Of sr.MethodInfo)(useds)
+            '    .AddRange({Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker})
+            '    useds = .ToArray
+            'End With
             Return Me
         End Function
 
         <Method(inline)>
         Public Function used(Of T6 As Class, T5 As Class, T4 As Class, T3 As Class, T2 As Class, T1 As Class)() As ils(Of T)
-            'useds = {Info.delegate(Of T6).invoker, Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker}
-            With New List(Of sr.MethodInfo)(useds)
-                .AddRange({Info.delegate(Of T6).invoker, Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker})
-                useds = .ToArray
-            End With
+            useds = {Info.delegate(Of T6).invoker, Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker}
+            'With New List(Of sr.MethodInfo)(useds)
+            '    .AddRange({Info.delegate(Of T6).invoker, Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker})
+            '    useds = .ToArray
+            'End With
             Return Me
         End Function
 
         <Method(inline)>
         Public Function used(Of T7 As Class, T6 As Class, T5 As Class, T4 As Class, T3 As Class, T2 As Class, T1 As Class)() As ils(Of T)
-            'useds = {Info.delegate(Of T7).invoker, Info.delegate(Of T6).invoker, Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker}
-            With New List(Of sr.MethodInfo)(useds)
-                .AddRange({Info.delegate(Of T7).invoker, Info.delegate(Of T6).invoker, Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker})
-                useds = .ToArray
-            End With
+            useds = {Info.delegate(Of T7).invoker, Info.delegate(Of T6).invoker, Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker}
+            'With New List(Of sr.MethodInfo)(useds)
+            '    .AddRange({Info.delegate(Of T7).invoker, Info.delegate(Of T6).invoker, Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker})
+            '    useds = .ToArray
+            'End With
             Return Me
         End Function
 
         <Method(inline)>
         Public Function used(Of T8 As Class, T7 As Class, T6 As Class, T5 As Class, T4 As Class, T3 As Class, T2 As Class, T1 As Class)() As ils(Of T)
-            'useds = {Info.delegate(Of T8).invoker, Info.delegate(Of T7).invoker, Info.delegate(Of T6).invoker, Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker}
-            With New List(Of sr.MethodInfo)(useds)
-                .AddRange({Info.delegate(Of T8).invoker, Info.delegate(Of T7).invoker, Info.delegate(Of T6).invoker, Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker})
-                useds = .ToArray
-            End With
+            useds = {Info.delegate(Of T8).invoker, Info.delegate(Of T7).invoker, Info.delegate(Of T6).invoker, Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker}
+            'With New List(Of sr.MethodInfo)(useds)
+            '    .AddRange({Info.delegate(Of T8).invoker, Info.delegate(Of T7).invoker, Info.delegate(Of T6).invoker, Info.delegate(Of T5).invoker, Info.delegate(Of T4).invoker, Info.delegate(Of T3).invoker, Info.delegate(Of T2).invoker, Info.delegate(Of T1).invoker})
+            '    useds = .ToArray
+            'End With
             Return Me
         End Function
 #End Region

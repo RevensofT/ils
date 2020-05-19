@@ -115,6 +115,7 @@ Namespace ILS
 
     Friend Structure collector(Of T As Class)
         Friend Shared ReadOnly items As New System.Collections.Generic.Dictionary(Of String, T)
+        'Friend Shared ReadOnly macros As New System.Collections.Generic.Dictionary(Of String, T)
     End Structure
 
 
@@ -158,6 +159,13 @@ Namespace ILS
         Private ReadOnly key_collected As String
         '==========================
 
+        'Private ReadOnly macro_name As String
+        '<Method(inline)>
+        'Friend Sub New(Code As String, Macro_name As String, Method As sre.DynamicMethod)
+        '    Me.New(Code, Method, Nothing)
+        '    Me.macro_name = Macro_name
+        'End Sub
+
         <Method(inline)>
         Friend Sub New(Code As String)
             Me.New(Code, Info.delegate(Of T).create_method, Code)
@@ -187,8 +195,10 @@ Namespace ILS
             stack = New Stack(Of Type)
 #End If
 
-            key_collected = Collect_key
-            If key_collected IsNot Nothing Then be_collected = collector(Of T).items.ContainsKey(key_collected)
+            'key_collected = Collect_key
+            'If key_collected IsNot Nothing Then be_collected = collector(Of T).items.ContainsKey(key_collected)
+
+            If Collect_key IsNot Nothing Then be_collected = collector(Of T).items.ContainsKey(Collect_key)
 
             If Not be_collected Then
                 meth = Method
@@ -209,8 +219,7 @@ Namespace ILS
             il.Emit(op.Ret)
 
 #If IL_DEBUG Then
-            Debug.WriteLine("ret")
-            rmax(If(meth.ReturnType Is Nothing, 0, 1))
+            rexit()
 #End If
 
             fin = DirectCast(meth.CreateDelegate(GetType(T)), Object)
@@ -245,6 +254,9 @@ Namespace ILS
                     key = (key << 8) + I
                     is_input = True
                 Case AscW(" "c)
+                    If key = 0 And num = 0 Then
+                        Exit Sub
+                    End If
                     keygen()
                     key = 0
                     num = 0
@@ -252,6 +264,8 @@ Namespace ILS
                     is_input_gen = False
                     is_input_word = False
                     word.Clear()
+                Case AscW(vbCr)
+                Case AscW(vbLf)
                 Case Else
                     Select Case True
                         Case is_input
@@ -312,6 +326,11 @@ Namespace ILS
             End If
         End Sub
 
+        <Method(inline)>
+        Public Sub rexit()
+            Debug.WriteLine("ret")
+            rmax(If(meth.ReturnType Is GetType(Void), 0, 1))
+        End Sub
 
         'Stack pUsh, pOp, pEek
 
@@ -332,7 +351,7 @@ Namespace ILS
             For i = 1 To Pop_count
                 stack.Pop()
             Next
-            stack.Push(Push_type)
+            If Push_type IsNot GetType(Void) Then stack.Push(Push_type)
         End Sub
         <Method(inline)>
         Public Sub sox(Pop_count As Int32)
@@ -344,7 +363,7 @@ Namespace ILS
 
         <Method(inline)>
         Public Sub su(Push_type As Type)
-            stack.Push(Push_type)
+            If Push_type IsNot GetType(Void) Then stack.Push(Push_type)
         End Sub
         <Method(inline)>
         Public Sub su(Of ST)()
@@ -360,7 +379,7 @@ Namespace ILS
         Public Sub sou(Push_type As Type)
             rmin(1)
             stack.Pop()
-            stack.Push(Push_type)
+            If Push_type IsNot GetType(Void) Then stack.Push(Push_type)
         End Sub
         <Method(inline)>
         Public Sub sou(Of ST)()
@@ -385,7 +404,7 @@ Namespace ILS
             rmin(2)
             stack.Pop()
             stack.Pop()
-            stack.Push(Push_type)
+            If Push_type IsNot GetType(Void) Then stack.Push(Push_type)
         End Sub
         <Method(inline)>
         Public Sub soou()
@@ -424,8 +443,7 @@ Namespace ILS
                         End Select
                     Case AscW(";"c) : .Emit(op.Ret)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ret")
-                        rmax(If(meth.ReturnType Is Nothing, 0, 1))
+                        rexit()
 #End If
                     Case (AscW("!"c) << 8) + AscW("!"c) : .Emit(op.Break)
 #If IL_DEBUG Then
