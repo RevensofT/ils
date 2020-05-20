@@ -1,5 +1,6 @@
 Imports lbl = System.Collections.Generic.Dictionary(Of Integer, System.Reflection.Emit.Label)
 Imports cil = System.Reflection.Emit.ILGenerator
+Imports sri = System.Runtime.InteropServices
 
 Namespace ILS
 
@@ -113,9 +114,45 @@ Namespace ILS
         End Function
     End Module
 
+    <sri.StructLayout(manual)>
+    Friend Structure reverser
+        <sri.FieldOffset(0)>
+        Public n As Long
+
+        <sri.FieldOffset(7)>
+        Public b1 As Byte
+        <sri.FieldOffset(6)>
+        Public b2 As Byte
+        <sri.FieldOffset(5)>
+        Public b3 As Byte
+        <sri.FieldOffset(4)>
+        Public b4 As Byte
+        <sri.FieldOffset(3)>
+        Public b5 As Byte
+        <sri.FieldOffset(2)>
+        Public b6 As Byte
+        <sri.FieldOffset(1)>
+        Public b7 As Byte
+        <sri.FieldOffset(0)>
+        Public b8 As Byte
+
+        Public Overrides Function ToString() As String
+            With New Text.StringBuilder
+                If b1 <> 0 Then .Append(ChrW(b1))
+                If b2 <> 0 Then .Append(ChrW(b2))
+                If b3 <> 0 Then .Append(ChrW(b3))
+                If b4 <> 0 Then .Append(ChrW(b4))
+                If b5 <> 0 Then .Append(ChrW(b5))
+                If b6 <> 0 Then .Append(ChrW(b6))
+                If b7 <> 0 Then .Append(ChrW(b7))
+                If b8 <> 0 Then .Append(ChrW(b8))
+                Return .ToString
+            End With
+        End Function
+    End Structure
+
     Friend Structure collector(Of T As Class)
         Friend Shared ReadOnly items As New System.Collections.Generic.Dictionary(Of String, T)
-        'Friend Shared ReadOnly macros As New System.Collections.Generic.Dictionary(Of String, T)
     End Structure
 
 
@@ -146,7 +183,7 @@ Namespace ILS
         Private r8s() As Double
 
         Private is_input, is_input_gen, is_input_word As Boolean
-        Private key As Int64, num As Integer
+        Private key As Int64, num As Int32
         Private ReadOnly word As Text.StringBuilder
 
         Public code As String
@@ -154,24 +191,13 @@ Namespace ILS
         '==========================
         ' Implement reuse system
         '==========================
-        'Friend Shared ReadOnly collector As New System.Collections.Generic.Dictionary(Of String, Object)
         Private ReadOnly be_collected As Boolean
         Private ReadOnly key_collected As String
         '==========================
 
-        'Private ReadOnly macro_name As String
-        '<Method(inline)>
-        'Friend Sub New(Code As String, Macro_name As String, Method As sre.DynamicMethod)
-        '    Me.New(Code, Method, Nothing)
-        '    Me.macro_name = Macro_name
-        'End Sub
-
         <Method(inline)>
         Friend Sub New(Code As String)
             Me.New(Code, Info.delegate(Of T).create_method, Code)
-
-            'Old version with type name in key, replace with generic type selection.
-            'Me.New(Code, Info.delegate(Of T).create_method, Code & GetType(T).FullName)
         End Sub
         <Method(inline)>
         Public Sub New(Code As String, Method As sre.DynamicMethod)
@@ -238,25 +264,23 @@ Namespace ILS
         <Method(inline)>
         Private Sub process(I As Byte)
             Select Case I
+                Case AscW("$"c) And is_input_word
+                    keygen()
+                    word.Clear()
                 Case AscW("$"c)
-                    If is_input_word Then
-                        keygen()
-                        word.Clear()
-                    Else
-                        is_input = False
-                        is_input_gen = False
-                        is_input_word = True
-                    End If
+                    is_input = False
+                    is_input_gen = False
+                    is_input_word = True
+                Case AscW("."c) And is_input
+                    keygen()
+                    is_input_gen = True
                 Case AscW("."c)
-                    If is_input Then keygen() : is_input_gen = True  'num = 0
                     is_input = True
                 Case AscW(":"c)
                     key = (key << 8) + I
                     is_input = True
+                Case AscW(" "c) And key = 0 And num = 0
                 Case AscW(" "c)
-                    If key = 0 And num = 0 Then
-                        Exit Sub
-                    End If
                     keygen()
                     key = 0
                     num = 0
@@ -280,15 +304,18 @@ Namespace ILS
 
         <Method(inline)>
         Private Sub numbering(Input As Byte)
-            If Input > 47 And Input < 58 Then
-                If is_input_gen Then num = 0 : is_input_gen = False
-                num = Input - 48 + num * 10
-            ElseIf key = AscW(":"c) And Input = AscW(":"c) Then ' :: == goto target label
-                key = (key << 8) + key
-            Else 'la.1.2.sa == la.1 la.2 sa.2
-                is_input = False
-                key = Input
-            End If
+            Select Case Input
+                Case Is > 47 And Input < 58
+                    If is_input_gen Then num = 0 : is_input_gen = False
+                    num = Input - 48 + num * 10
+                Case AscW(":"c) And key = AscW(":"c) ' :: == goto target label
+                    key = (key << 8) + key
+                Case AscW("-"c) ' .123- == -123
+                    num *= -1
+                Case Else 'la.1.2.sa == la.1 la.2 sa.2
+                    is_input = False
+                    key = Input
+            End Select
         End Sub
 
         <Method(inline)>
@@ -428,19 +455,18 @@ Namespace ILS
         Private Sub keygen()
             With il
                 Select Case key
-                    Case 0
-                        Select Case True
-                            Case is_input : ldc()
+                    Case 0 And is_input
+                        ldc()
 #If IL_DEBUG Then
-                                Debug.WriteLine($"ldc.i4 {num}")
-                                su(Of Int32)()
+                        Debug.WriteLine($"ldc.i4 {num}")
+                        su(Of Int32)()
 #End If
-                            Case is_input_word : .Emit(op.Ldstr, word.ToString)
+                    Case 0 And is_input_word
+                        .Emit(op.Ldstr, word.ToString)
 #If IL_DEBUG Then
-                                Debug.WriteLine($"ldstr {word}")
-                                su(Of String)()
+                        Debug.WriteLine($"ldstr {word}")
+                        su(Of String)()
 #End If
-                        End Select
                     Case AscW(";"c) : .Emit(op.Ret)
 #If IL_DEBUG Then
                         rexit()
@@ -1164,7 +1190,7 @@ Namespace ILS
                         'pointer 
 
                     Case Else
-                        Throw New Exception("Unknow key : " & key)
+                        Throw New Exception("Unknow key : " & New reverser With {.n = key}.ToString)
                 End Select
             End With
         End Sub
@@ -1187,8 +1213,10 @@ Namespace ILS
                     il.Emit(op.Stloc_2)
                 Case 3
                     il.Emit(op.Stloc_3)
-                Case Else
+                Case Is < 256
                     il.Emit(op.Stloc_S, num)
+                Case Is > 255
+                    il.Emit(op.Stloc, num)
             End Select
         End Sub
 
@@ -1203,8 +1231,10 @@ Namespace ILS
                     il.Emit(op.Ldloc_2)
                 Case 3
                     il.Emit(op.Ldloc_3)
-                Case Else
+                Case Is < 256
                     il.Emit(op.Ldloc_S, num)
+                Case Is > 255
+                    il.Emit(op.Ldloc, num)
             End Select
         End Sub
 
@@ -1219,8 +1249,10 @@ Namespace ILS
                     il.Emit(op.Ldarg_2)
                 Case 3
                     il.Emit(op.Ldarg_3)
-                Case Else
+                Case Is < 256
                     il.Emit(op.Ldarg_S, num)
+                Case Is > 255
+                    il.Emit(op.Ldarg, num)
             End Select
         End Sub
 
@@ -1245,8 +1277,12 @@ Namespace ILS
                     il.Emit(op.Ldc_I4_7)
                 Case 8
                     il.Emit(op.Ldc_I4_8)
+                Case Is < 128
+                    il.Emit(op.Ldc_I4_S, num)
+                Case Is > -129
+                    il.Emit(op.Ldc_I4_S, num)
                 Case Else
-                    If num < 128 Then il.Emit(op.Ldc_I4_S, CByte(num)) Else il.Emit(op.Ldc_I4, num)
+                    il.Emit(op.Ldc_I4, num)
             End Select
         End Sub
         <Method(inline)>
