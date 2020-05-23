@@ -264,23 +264,8 @@ Namespace ILS
         <Method(inline)>
         Private Sub process(I As Byte)
             Select Case I
-                Case AscW("$"c) And is_input_word
-                    keygen()
-                    word.Clear()
-                Case AscW("$"c)
-                    is_input = False
-                    is_input_gen = False
-                    is_input_word = True
-                Case AscW("."c) And is_input
-                    keygen()
-                    is_input_gen = True
-                Case AscW("."c)
-                    is_input = True
-                Case AscW(":"c)
-                    key = (key << 8) + I
-                    is_input = True
-                Case AscW(" "c) And key = 0 And num = 0
                 Case AscW(" "c)
+                    If key = 0 And num = 0 And Not is_input Then Exit Sub
                     keygen()
                     key = 0
                     num = 0
@@ -290,6 +275,21 @@ Namespace ILS
                     word.Clear()
                 Case AscW(vbCr)
                 Case AscW(vbLf)
+                Case AscW("$"c)
+                    If is_input_word Then
+                        keygen()
+                        word.Clear()
+                    Else
+                        is_input = False
+                        is_input_gen = False
+                        is_input_word = True
+                    End If
+                Case AscW("."c)
+                    If is_input Then keygen() : is_input_gen = True  'num = 0
+                    is_input = True
+                Case AscW(":"c)
+                    key = (key << 8) + I
+                    is_input = True
                 Case Else
                     Select Case True
                         Case is_input
@@ -304,13 +304,25 @@ Namespace ILS
 
         <Method(inline)>
         Private Sub numbering(Input As Byte)
+            'If Input > 47 And Input < 58 Then
+            '    If is_input_gen Then num = 0 : is_input_gen = False
+            '    num = Input - 48 + num * 10
+            'ElseIf key = AscW(":"c) And Input = AscW(":"c) Then ' :: == goto target label
+            '    key = (key << 8) + key
+            'ElseIf Input = AscW("-"c) Then
+            '    num *= -1
+            'Else 'la.1.2.sa == la.1 la.2 sa.2
+            '    is_input = False
+            '    key = Input
+            'End If
+
             Select Case Input
-                Case Is > 47 And Input < 58
+                Case 48 To 57
                     If is_input_gen Then num = 0 : is_input_gen = False
                     num = Input - 48 + num * 10
-                Case AscW(":"c) And key = AscW(":"c) ' :: == goto target label
-                    key = (key << 8) + key
-                Case AscW("-"c) ' .123- == -123
+                Case AscW(":"c)
+                    If key = AscW(":"c) Then key = (key << 8) + key
+                Case AscW("-"c)
                     num *= -1
                 Case Else 'la.1.2.sa == la.1 la.2 sa.2
                     is_input = False
@@ -328,10 +340,12 @@ Namespace ILS
         <Method(inline)>
         Public Function jsk() As String
             With New Text.StringBuilder
-                Do Until stack.Count = 1
-                    .Append($"{stack.Pop}, ")
-                Loop
-                .Append($"{stack.Pop}")
+                If stack.Count > 0 Then
+                    Do Until stack.Count = 1
+                        .Append($"{stack.Pop}, ")
+                    Loop
+                    .Append($"{stack.Pop}")
+                End If
                 Return .ToString
             End With
         End Function
@@ -356,7 +370,13 @@ Namespace ILS
         <Method(inline)>
         Public Sub rexit()
             Debug.WriteLine("ret")
-            rmax(If(meth.ReturnType Is GetType(Void), 0, 1))
+            'rmax(If(meth.ReturnType Is GetType(Void), 0, 1))
+            If meth.ReturnType Is GetType(Void) Then
+                rmax(0)
+            Else
+                rmax(1)
+                so()
+            End If
         End Sub
 
         'Stack pUsh, pOp, pEek
@@ -455,688 +475,690 @@ Namespace ILS
         Private Sub keygen()
             With il
                 Select Case key
-                    Case 0 And is_input
-                        ldc()
+                    Case 0
+                        Select Case True
+                            Case is_input : ldc()
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldc.i4 {num}")
-                        su(Of Int32)()
+                                Debug.WriteLine($"ldc.i4 {num}")
+                                su(Of Int32)()
 #End If
-                    Case 0 And is_input_word
-                        .Emit(op.Ldstr, word.ToString)
+                            Case is_input_word
+                                .Emit(op.Ldstr, word.ToString)
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldstr {word}")
-                        su(Of String)()
+                                Debug.WriteLine($"ldstr {word}")
+                                su(Of String)()
 #End If
+                        End Select
                     Case AscW(";"c) : .Emit(op.Ret)
 #If IL_DEBUG Then
-                        rexit()
+                                rexit()
 #End If
-                    Case (AscW("!"c) << 8) + AscW("!"c) : .Emit(op.Break)
+                            Case (AscW("!"c) << 8) + AscW("!"c) : .Emit(op.Break)
 #If IL_DEBUG Then
-                        Debug.WriteLine("break")
+                                Debug.WriteLine("break")
 #End If
-                    Case (AscW("["c) << 8 * 2) + (AscW("-"c) << 8) + AscW("]"c) : .Emit(op.Pop)
+                            Case (AscW("["c) << 8 * 2) + (AscW("-"c) << 8) + AscW("]"c) : .Emit(op.Pop)
 #If IL_DEBUG Then
-                        Debug.WriteLine("pop")
-                        so()
+                                Debug.WriteLine("pop")
+                                so()
 #End If
-                    Case (AscW("["c) << 8 * 2) + (AscW("+"c) << 8) + AscW("]"c) : .Emit(op.Dup)
+                            Case (AscW("["c) << 8 * 2) + (AscW("+"c) << 8) + AscW("]"c) : .Emit(op.Dup)
 #If IL_DEBUG Then
-                        Debug.WriteLine("dup")
-                        su()
+                                Debug.WriteLine("dup")
+                                su()
 #End If
                         'Must not has anything left in stack except uint of new alloc size.
-                    Case (AscW("["c) << 8 * 2) + (AscW("n"c) << 8) + AscW("]"c) : .Emit(op.Localloc)
+                            Case (AscW("["c) << 8 * 2) + (AscW("n"c) << 8) + AscW("]"c) : .Emit(op.Localloc)
 #If IL_DEBUG Then
-                        Debug.WriteLine("alloc")
-                        If stack.Count <> 1 Then Throw New Exception("Only alloc size value coulde be on stack when alloc stack frame memory.")
-                        sou(Of UIntPtr)()
+                                Debug.WriteLine("alloc")
+                                If stack.Count <> 1 Then Throw New Exception("Only alloc size value coulde be on stack when alloc stack frame memory.")
+                                sou(Of UIntPtr)()
 #End If
 
 #Region "Math"
-                    Case AscW("+"c) : .Emit(op.Add)
+                            Case AscW("+"c) : .Emit(op.Add)
 #If IL_DEBUG Then
-                        Debug.WriteLine("add")
-                        soou()
+                                Debug.WriteLine("add")
+                                soou()
 #End If
-                    Case AscW("-"c) : .Emit(op.Sub)
+                            Case AscW("-"c) : .Emit(op.Sub)
 #If IL_DEBUG Then
-                        Debug.WriteLine("sub")
-                        soou()
+                                Debug.WriteLine("sub")
+                                soou()
 #End If
-                    Case AscW("*"c) : .Emit(op.Mul)
+                            Case AscW("*"c) : .Emit(op.Mul)
 #If IL_DEBUG Then
-                        Debug.WriteLine("mul")
-                        soou()
+                                Debug.WriteLine("mul")
+                                soou()
 #End If
-                    Case AscW("/"c) : .Emit(op.Div)
+                            Case AscW("/"c) : .Emit(op.Div)
 #If IL_DEBUG Then
-                        Debug.WriteLine("div")
-                        soou()
+                                Debug.WriteLine("div")
+                                soou()
 #End If
-                    Case AscW("%"c) : .Emit(op.[Rem]) 'mod
+                            Case AscW("%"c) : .Emit(op.[Rem]) 'mod
 #If IL_DEBUG Then
-                        Debug.WriteLine("rem")
-                        soou()
-#End If
-
-                    Case (AscW("-"c) << 8) + AscW("1"c) : .Emit(op.Ldc_I4_M1)
-#If IL_DEBUG Then
-                        Debug.WriteLine("ldc.i4.m1")
-                        su(Of Int32)()
+                                Debug.WriteLine("rem")
+                                soou()
 #End If
 
-                    Case (AscW("+"c) << 8) + AscW("+"c)
-                        .Emit(op.Ldc_I4_1)
-                        .Emit(op.Add)
+                            Case (AscW("-"c) << 8) + AscW("1"c) : .Emit(op.Ldc_I4_M1)
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldc.i4.1")
-                        Debug.WriteLine("add")
-                        sou()
-#End If
-                    Case (AscW("-"c) << 8) + AscW("-"c)
-                        .Emit(op.Ldc_I4_1)
-                        .Emit(op.Sub)
-#If IL_DEBUG Then
-                        Debug.WriteLine("ldc.i4.1")
-                        Debug.WriteLine("sub")
-                        sou()
-#End If
-                    Case (AscW("*"c) << 8) + AscW("*"c)
-                        .Emit(op.Dup)
-                        .Emit(op.Mul)
-#If IL_DEBUG Then
-                        Debug.WriteLine("dup")
-                        Debug.WriteLine("mul")
-                        sou()
-#End If
-                    Case (AscW("-"c) << 8) + AscW("*"c)
-                        .Emit(op.Ldc_I4_M1)
-                        .Emit(op.Mul)
-#If IL_DEBUG Then
-                        Debug.WriteLine("ldc.i4.m1")
-                        Debug.WriteLine("mul")
-                        sou()
-#End If
-                    Case (AscW("-"c) << 8) + AscW("/"c)
-                        .Emit(op.Ldc_I4_M1)
-                        .Emit(op.Div)
-#If IL_DEBUG Then
-                        Debug.WriteLine("ldc.i4.m1")
-                        Debug.WriteLine("div")
-                        sou()
+                                Debug.WriteLine("ldc.i4.m1")
+                                su(Of Int32)()
 #End If
 
-                    Case AscW("&"c) : .Emit(op.And)
+                            Case (AscW("+"c) << 8) + AscW("+"c)
+                                .Emit(op.Ldc_I4_1)
+                                .Emit(op.Add)
 #If IL_DEBUG Then
-                        Debug.WriteLine("and")
-                        soou()
+                                Debug.WriteLine($"ldc.i4.1")
+                                Debug.WriteLine("add")
+                                sou()
 #End If
-                    Case AscW("|"c) : .Emit(op.Or)
+                            Case (AscW("-"c) << 8) + AscW("-"c)
+                                .Emit(op.Ldc_I4_1)
+                                .Emit(op.Sub)
 #If IL_DEBUG Then
-                        Debug.WriteLine("or")
-                        soou()
+                                Debug.WriteLine("ldc.i4.1")
+                                Debug.WriteLine("sub")
+                                sou()
 #End If
-                    Case (AscW("&"c) << 8) + AscW("|"c) : .Emit(op.Xor)
+                            Case (AscW("*"c) << 8) + AscW("*"c)
+                                .Emit(op.Dup)
+                                .Emit(op.Mul)
 #If IL_DEBUG Then
-                        Debug.WriteLine("xor")
-                        soou()
+                                Debug.WriteLine("dup")
+                                Debug.WriteLine("mul")
+                                sou()
 #End If
-                    Case AscW("!"c) : .Emit(op.Not)
+                            Case (AscW("-"c) << 8) + AscW("*"c)
+                                .Emit(op.Ldc_I4_M1)
+                                .Emit(op.Mul)
 #If IL_DEBUG Then
-                        Debug.WriteLine("not")
-                        rmin(1)
+                                Debug.WriteLine("ldc.i4.m1")
+                                Debug.WriteLine("mul")
+                                sou()
+#End If
+                            Case (AscW("-"c) << 8) + AscW("/"c)
+                                .Emit(op.Ldc_I4_M1)
+                                .Emit(op.Div)
+#If IL_DEBUG Then
+                                Debug.WriteLine("ldc.i4.m1")
+                                Debug.WriteLine("div")
+                                sou()
 #End If
 
-                    Case AscW(">"c) : .Emit(op.Cgt)
+                            Case AscW("&"c) : .Emit(op.And)
 #If IL_DEBUG Then
-                        Debug.WriteLine("cgt")
-                        soou(Of Boolean)()
+                                Debug.WriteLine("and")
+                                soou()
 #End If
-                    Case AscW("<"c) : .Emit(op.Clt)
+                            Case AscW("|"c) : .Emit(op.Or)
 #If IL_DEBUG Then
-                        Debug.WriteLine("clt")
-                        soou(Of Boolean)()
+                                Debug.WriteLine("or")
+                                soou()
 #End If
-                    Case AscW("="c) : .Emit(op.Ceq)
+                            Case (AscW("&"c) << 8) + AscW("|"c) : .Emit(op.Xor)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ceq")
-                        soou(Of Boolean)()
+                                Debug.WriteLine("xor")
+                                soou()
+#End If
+                            Case AscW("!"c) : .Emit(op.Not)
+#If IL_DEBUG Then
+                                Debug.WriteLine("not")
+                                rmin(1)
 #End If
 
-                    Case (AscW("<"c) << 8) + AscW("<"c) : .Emit(op.Shl)
+                            Case AscW(">"c) : .Emit(op.Cgt)
 #If IL_DEBUG Then
-                        Debug.WriteLine("shl")
-                        soou()
+                                Debug.WriteLine("cgt")
+                                soou(Of Boolean)()
 #End If
-                    Case (AscW(">"c) << 8) + AscW(">"c) : .Emit(op.Shr)
+                            Case AscW("<"c) : .Emit(op.Clt)
 #If IL_DEBUG Then
-                        Debug.WriteLine("shr")
-                        soou()
+                                Debug.WriteLine("clt")
+                                soou(Of Boolean)()
+#End If
+                            Case AscW("="c) : .Emit(op.Ceq)
+#If IL_DEBUG Then
+                                Debug.WriteLine("ceq")
+                                soou(Of Boolean)()
+#End If
+
+                            Case (AscW("<"c) << 8) + AscW("<"c) : .Emit(op.Shl)
+#If IL_DEBUG Then
+                                Debug.WriteLine("shl")
+                                soou()
+#End If
+                            Case (AscW(">"c) << 8) + AscW(">"c) : .Emit(op.Shr)
+#If IL_DEBUG Then
+                                Debug.WriteLine("shr")
+                                soou()
 #End If
 #End Region
 
 #Region "Branch"
-                    Case AscW(":"c) : .MarkLabel(lbl(num))
+                            Case AscW(":"c) : .MarkLabel(lbl(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"{num}:")
+                                Debug.WriteLine($"{num}:")
 #End If
-                    Case (AscW(":"c) << 8) + AscW(":"c) : .Emit(op.Br, lbl(num))
+                            Case (AscW(":"c) << 8) + AscW(":"c) : .Emit(op.Br, lbl(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"br {num}")
+                                Debug.WriteLine($"br {num}")
 #End If
-                    Case (AscW("t"c) << 8) + AscW(":"c) : .Emit(op.Brtrue, lbl(num))
+                            Case (AscW("t"c) << 8) + AscW(":"c) : .Emit(op.Brtrue, lbl(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"brtrue {num}")
-                        so()
+                                Debug.WriteLine($"brtrue {num}")
+                                so()
 #End If
-                    Case (AscW("f"c) << 8) + AscW(":"c) : .Emit(op.Brfalse, lbl(num))
+                            Case (AscW("f"c) << 8) + AscW(":"c) : .Emit(op.Brfalse, lbl(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"brfalse {num}")
-                        so()
-#End If
-
-                    Case (AscW("="c) << 8) + AscW(":"c) : .Emit(op.Beq, lbl(num))
-#If IL_DEBUG Then
-                        Debug.WriteLine($"beq {num}")
-                        soo()
-#End If
-                    Case (AscW(">"c) << 8) + AscW(":"c) : .Emit(op.Bgt, lbl(num))
-#If IL_DEBUG Then
-                        Debug.WriteLine($"bgt {num}")
-                        soo()
-#End If
-                    Case (AscW("<"c) << 8) + AscW(":"c) : .Emit(op.Blt, lbl(num))
-#If IL_DEBUG Then
-                        Debug.WriteLine($"blt {num}")
-                        soo()
-#End If
-                    Case (AscW(">"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c) : .Emit(op.Bge, lbl(num))
-#If IL_DEBUG Then
-                        Debug.WriteLine($"bge {num}")
-                        soo()
-#End If
-                    Case (AscW("<"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c) : .Emit(op.Ble, lbl(num))
-#If IL_DEBUG Then
-                        Debug.WriteLine($"ble {num}")
-                        soo()
+                                Debug.WriteLine($"brfalse {num}")
+                                so()
 #End If
 
-                    Case (AscW("!"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c) : .Emit(op.Bne_Un, lbl(num))
+                            Case (AscW("="c) << 8) + AscW(":"c) : .Emit(op.Beq, lbl(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"bne.un {num}")
-                        soo()
+                                Debug.WriteLine($"beq {num}")
+                                soo()
 #End If
-                    Case (AscW("u"c) << 8 * 2) + (AscW(">"c) << 8) + AscW(":"c) : .Emit(op.Bgt_Un, lbl(num))
+                            Case (AscW(">"c) << 8) + AscW(":"c) : .Emit(op.Bgt, lbl(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"bgt.un {num}")
-                        soo()
+                                Debug.WriteLine($"bgt {num}")
+                                soo()
 #End If
-                    Case (AscW("u"c) << 8 * 2) + (AscW("<"c) << 8) + AscW(":"c) : .Emit(op.Blt_Un, lbl(num))
+                            Case (AscW("<"c) << 8) + AscW(":"c) : .Emit(op.Blt, lbl(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"blt.un {num}")
-                        soo()
+                                Debug.WriteLine($"blt {num}")
+                                soo()
 #End If
-                    Case (AscW("u"c) << 8 * 3) + (AscW(">"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c)
-                        .Emit(op.Bge_Un, lbl(num))
+                            Case (AscW(">"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c) : .Emit(op.Bge, lbl(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"bge.un {num}")
-                        soo()
+                                Debug.WriteLine($"bge {num}")
+                                soo()
 #End If
-                    Case (AscW("u"c) << 8 * 3) + (AscW("<"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c)
-                        .Emit(op.Ble_Un, lbl(num))
+                            Case (AscW("<"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c) : .Emit(op.Ble, lbl(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ble.un {num}")
-                        soo()
+                                Debug.WriteLine($"ble {num}")
+                                soo()
+#End If
+
+                            Case (AscW("!"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c) : .Emit(op.Bne_Un, lbl(num))
+#If IL_DEBUG Then
+                                Debug.WriteLine($"bne.un {num}")
+                                soo()
+#End If
+                            Case (AscW("u"c) << 8 * 2) + (AscW(">"c) << 8) + AscW(":"c) : .Emit(op.Bgt_Un, lbl(num))
+#If IL_DEBUG Then
+                                Debug.WriteLine($"bgt.un {num}")
+                                soo()
+#End If
+                            Case (AscW("u"c) << 8 * 2) + (AscW("<"c) << 8) + AscW(":"c) : .Emit(op.Blt_Un, lbl(num))
+#If IL_DEBUG Then
+                                Debug.WriteLine($"blt.un {num}")
+                                soo()
+#End If
+                            Case (AscW("u"c) << 8 * 3) + (AscW(">"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c)
+                                .Emit(op.Bge_Un, lbl(num))
+#If IL_DEBUG Then
+                                Debug.WriteLine($"bge.un {num}")
+                                soo()
+#End If
+                            Case (AscW("u"c) << 8 * 3) + (AscW("<"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c)
+                                .Emit(op.Ble_Un, lbl(num))
+#If IL_DEBUG Then
+                                Debug.WriteLine($"ble.un {num}")
+                                soo()
 #End If
 #End Region
 
                         'Invoke method
                         '[re] with [use] for recursion method
-                    Case (AscW("r"c) << 8) + AscW("e"c) : .Emit(op.Tailcall)
+                            Case (AscW("r"c) << 8) + AscW("e"c) : .Emit(op.Tailcall)
 #If IL_DEBUG Then
-                        Debug.Write("tail.")
+                                Debug.Write("tail.")
 #End If
-                    Case (AscW("u"c) << 8 * 2) + (AscW("s"c) << 8) + AscW("e"c) : .Emit(op.Call, uses(num))
+                            Case (AscW("u"c) << 8 * 2) + (AscW("s"c) << 8) + AscW("e"c) : .Emit(op.Call, uses(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"call {uses(num)}")
-                        soxu(uses(num).GetParameters.Length + If(uses(num).IsVirtual, 1, 0), uses(num).ReturnType)
+                                Debug.WriteLine($"call {uses(num)}")
+                                soxu(uses(num).GetParameters.Length + If(uses(num).IsVirtual, 1, 0), uses(num).ReturnType)
 #End If
-                    Case (AscW("u"c) << 8 * 3) + (AscW("s"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("d"c)
-                        .Emit(op.Call, useds(num))
+                            Case (AscW("u"c) << 8 * 3) + (AscW("s"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("d"c)
+                                .Emit(op.Call, useds(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"call {useds(num)}")
-                        soxu(useds(num).GetParameters.Length + 1, useds(num).ReturnType)
+                                Debug.WriteLine($"call {useds(num)}")
+                                soxu(useds(num).GetParameters.Length + 1, useds(num).ReturnType)
 #End If
                         '[use-me]
-                    Case (CLng(AscW("u"c)) << 8 * 5) + (CLng(AscW("s"c)) << 8 * 4) + (AscW("e"c) << 8 * 3) + (AscW("-"c) << 8 * 2) + (AscW("m"c) << 8) + AscW("e"c)
-                        .Emit(op.Call, meth)
+                            Case (CLng(AscW("u"c)) << 8 * 5) + (CLng(AscW("s"c)) << 8 * 4) + (AscW("e"c) << 8 * 3) + (AscW("-"c) << 8 * 2) + (AscW("m"c) << 8) + AscW("e"c)
+                                .Emit(op.Call, meth)
 #If IL_DEBUG Then
-                        Debug.WriteLine($"call {meth}")
-                        soxu(meth.GetParameters.Length, meth.ReturnType)
+                                Debug.WriteLine($"call {meth}")
+                                soxu(meth.GetParameters.Length, meth.ReturnType)
 #End If
-                    Case (AscW("j"c) << 8 * 2) + (AscW("m"c) << 8) + AscW("p"c) : .Emit(op.Jmp, uses(num))
+                            Case (AscW("j"c) << 8 * 2) + (AscW("m"c) << 8) + AscW("p"c) : .Emit(op.Jmp, uses(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"jmp {uses(num)}")
-                        rmax(0)
+                                Debug.WriteLine($"jmp {uses(num)}")
+                                rmax(0)
 #End If
                         '[jmp-me]
-                    Case (CLng(AscW("j"c)) << 8 * 5) + (CLng(AscW("m"c)) << 8 * 4) + (AscW("p"c) << 8 * 3) + (AscW("-"c) << 8 * 2) + (AscW("m"c) << 8) + AscW("e"c)
-                        .Emit(op.Jmp, meth)
+                            Case (CLng(AscW("j"c)) << 8 * 5) + (CLng(AscW("m"c)) << 8 * 4) + (AscW("p"c) << 8 * 3) + (AscW("-"c) << 8 * 2) + (AscW("m"c) << 8) + AscW("e"c)
+                                .Emit(op.Jmp, meth)
 #If IL_DEBUG Then
-                        Debug.WriteLine($"jmp {meth}")
-                        rmax(0)
+                                Debug.WriteLine($"jmp {meth}")
+                                rmax(0)
 #End If
 
                         'Load constant data
-                    Case (AscW("t"c) << 8 * 2) + (AscW("x"c) << 8) + AscW("t"c)
-                        .Emit(op.Ldstr, txts(num))
+                            Case (AscW("t"c) << 8 * 2) + (AscW("x"c) << 8) + AscW("t"c)
+                                .Emit(op.Ldstr, txts(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldstr {txts(num)}")
-                        su(Of String)()
+                                Debug.WriteLine($"ldstr {txts(num)}")
+                                su(Of String)()
 #End If
-                    Case (AscW("i"c) << 8) + AscW("4"c)
-                        .Emit(op.Ldc_I4, i4s(num))
+                            Case (AscW("i"c) << 8) + AscW("4"c)
+                                .Emit(op.Ldc_I4, i4s(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldc.i4 {i4s(num)}")
-                        su(Of Int32)()
+                                Debug.WriteLine($"ldc.i4 {i4s(num)}")
+                                su(Of Int32)()
 #End If
-                    Case (AscW("i"c) << 8) + AscW("8"c)
-                        .Emit(op.Ldc_I8, i8s(num))
+                            Case (AscW("i"c) << 8) + AscW("8"c)
+                                .Emit(op.Ldc_I8, i8s(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldc.i8 {i8s(num)}")
-                        su(Of Int64)()
+                                Debug.WriteLine($"ldc.i8 {i8s(num)}")
+                                su(Of Int64)()
 #End If
-                    Case (AscW("r"c) << 8) + AscW("4"c)
-                        .Emit(op.Ldc_R4, r4s(num))
+                            Case (AscW("r"c) << 8) + AscW("4"c)
+                                .Emit(op.Ldc_R4, r4s(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldc.r4 {r4s(num)}")
-                        su(Of Single)()
+                                Debug.WriteLine($"ldc.r4 {r4s(num)}")
+                                su(Of Single)()
 #End If
-                    Case (AscW("r"c) << 8) + AscW("8"c)
-                        .Emit(op.Ldc_R8, r8s(num))
+                            Case (AscW("r"c) << 8) + AscW("8"c)
+                                .Emit(op.Ldc_R8, r8s(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldc.r8 {r8s(num)}")
-                        su(Of Double)()
+                                Debug.WriteLine($"ldc.r8 {r8s(num)}")
+                                su(Of Double)()
 #End If
 
                         'Get size of data
-                    Case (AscW("m"c) << 8) + AscW("t"c)
-                        .Emit(op.Sizeof, types(num))
+                            Case (AscW("m"c) << 8) + AscW("t"c)
+                                .Emit(op.Sizeof, types(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"sizeof {types(num)}")
-                        su(Of int)()
+                                Debug.WriteLine($"sizeof {types(num)}")
+                                su(Of int)()
 #End If
 
                         'New object and array
-                    Case (AscW("n"c) << 8 * 2) + (AscW("a"c) << 8) + AscW("t"c)
-                        .Emit(op.Newarr, types(num))
+                            Case (AscW("n"c) << 8 * 2) + (AscW("a"c) << 8) + AscW("t"c)
+                                .Emit(op.Newarr, types(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"newarr {types(num)}")
-                        sou(types(num).MakeArrayType)
+                                Debug.WriteLine($"newarr {types(num)}")
+                                sou(types(num).MakeArrayType)
 #End If
-                    Case (AscW("n"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("w"c)
-                        .Emit(op.Newobj, If(news Is Nothing,
+                            Case (AscW("n"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("w"c)
+                                .Emit(op.Newobj, If(news Is Nothing,
                                             types(num).GetConstructors(sr.BindingFlags.Public Or
                                                                        sr.BindingFlags.NonPublic Or
                                                                        sr.BindingFlags.Instance)(0),
                                             news(num)))
 #If IL_DEBUG Then
-                        Dim Ctor = If(news Is Nothing, types(num).GetConstructors(16 Or 32 Or 4)(0), news(num))
-                        Debug.WriteLine($"newobj {Ctor}")
-                        soxu(Ctor.GetParameters.Length, Ctor.DeclaringType)
+                                Dim Ctor = If(news Is Nothing, types(num).GetConstructors(16 Or 32 Or 4)(0), news(num))
+                                Debug.WriteLine($"newobj {Ctor}")
+                                soxu(Ctor.GetParameters.Length, Ctor.DeclaringType)
 #End If
-                    Case (AscW("a"c) << 8 * 3) + (AscW("n"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("w"c)
-                        .Emit(op.Call, news(num))
+                            Case (AscW("a"c) << 8 * 3) + (AscW("n"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("w"c)
+                                .Emit(op.Call, news(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"call {news(num)}")
-                        sox(news(num).GetParameters.Length + 1)
+                                Debug.WriteLine($"call {news(num)}")
+                                sox(news(num).GetParameters.Length + 1)
 #End If
 
                         'Memory manage
-                    Case (AscW("c"c) << 8 * 3) + (AscW("p"c) << 8 * 2) + (AscW("y"c) << 8) + AscW("t"c)
-                        .Emit(op.Cpobj, types(num))
+                            Case (AscW("c"c) << 8 * 3) + (AscW("p"c) << 8 * 2) + (AscW("y"c) << 8) + AscW("t"c)
+                                .Emit(op.Cpobj, types(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"cpobj {types(num)}")
-                        soo()
+                                Debug.WriteLine($"cpobj {types(num)}")
+                                soo()
 #End If
-                    Case (AscW("i"c) << 8 * 3) + (AscW("n"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("t"c)
-                        .Emit(op.Initobj, types(num))
+                            Case (AscW("i"c) << 8 * 3) + (AscW("n"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("t"c)
+                                .Emit(op.Initobj, types(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"initobj {types(num)}")
-                        so()
+                                Debug.WriteLine($"initobj {types(num)}")
+                                so()
 #End If
-                    Case (AscW("c"c) << 8 * 3) + (AscW("p"c) << 8 * 2) + (AscW("y"c) << 8) + AscW("b"c)
-                        .Emit(op.Cpblk)
+                            Case (AscW("c"c) << 8 * 3) + (AscW("p"c) << 8 * 2) + (AscW("y"c) << 8) + AscW("b"c)
+                                .Emit(op.Cpblk)
 #If IL_DEBUG Then
-                        Debug.WriteLine("cpblk")
-                        sox(3)
+                                Debug.WriteLine("cpblk")
+                                sox(3)
 #End If
-                    Case (AscW("i"c) << 8 * 3) + (AscW("n"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("b"c)
-                        .Emit(op.Initblk)
+                            Case (AscW("i"c) << 8 * 3) + (AscW("n"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("b"c)
+                                .Emit(op.Initblk)
 #If IL_DEBUG Then
-                        Debug.WriteLine("initblk")
-                        sox(3)
+                                Debug.WriteLine("initblk")
+                                sox(3)
 #End If
 
                         'Argument
-                    Case (AscW("l"c) << 8) + AscW("a"c)
-                        ldarg()
+                            Case (AscW("l"c) << 8) + AscW("a"c)
+                                ldarg()
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldarg {num}")
-                        su(Info.delegate(Of T).param_types(num))
+                                Debug.WriteLine($"ldarg {num}")
+                                su(Info.delegate(Of T).param_types(num))
 #End If
-                    Case (AscW("s"c) << 8) + AscW("a"c)
-                        .Emit(op.Starg_S, num)
+                            Case (AscW("s"c) << 8) + AscW("a"c)
+                                .Emit(op.Starg_S, num)
 #If IL_DEBUG Then
-                        Debug.WriteLine($"starg {num}")
-                        so()
+                                Debug.WriteLine($"starg {num}")
+                                so()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("a"c) << 8) + AscW("a"c)
-                        .Emit(op.Ldarga_S, num)
+                            Case (AscW("l"c) << 8 * 2) + (AscW("a"c) << 8) + AscW("a"c)
+                                .Emit(op.Ldarga_S, num)
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldarga {num}")
-                        su(Of UIntPtr)()
+                                Debug.WriteLine($"ldarga {num}")
+                                su(Of UIntPtr)()
 #End If
 
                         'Local variant
-                    Case (AscW("l"c) << 8) + AscW("o"c)
-                        ldloc()
+                            Case (AscW("l"c) << 8) + AscW("o"c)
+                                ldloc()
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldloc.s {num}")
-                        su(Of local)()
+                                Debug.WriteLine($"ldloc.s {num}")
+                                su(Of local)()
 #End If
-                    Case (AscW("s"c) << 8) + AscW("o"c)
-                        stloc()
+                            Case (AscW("s"c) << 8) + AscW("o"c)
+                                stloc()
 #If IL_DEBUG Then
-                        Debug.WriteLine($"stloc.s {num}")
-                        so()
+                                Debug.WriteLine($"stloc.s {num}")
+                                so()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("a"c) << 8) + AscW("o"c)
-                        .Emit(op.Ldloca_S, num)
+                            Case (AscW("l"c) << 8 * 2) + (AscW("a"c) << 8) + AscW("o"c)
+                                .Emit(op.Ldloca_S, num)
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldloca.s {num}")
-                        su(Of UIntPtr)()
+                                Debug.WriteLine($"ldloca.s {num}")
+                                su(Of UIntPtr)()
 #End If
 
                         'Field
-                    Case (AscW("l"c) << 8) + AscW("f"c)
-                        .Emit(op.Ldfld, fields(num))
+                            Case (AscW("l"c) << 8) + AscW("f"c)
+                                .Emit(op.Ldfld, fields(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldfld {fields(num)}")
-                        sou(fields(num).FieldType)
+                                Debug.WriteLine($"ldfld {fields(num)}")
+                                sou(fields(num).FieldType)
 #End If
-                    Case (AscW("s"c) << 8) + AscW("f"c)
-                        .Emit(op.Stfld, fields(num))
+                            Case (AscW("s"c) << 8) + AscW("f"c)
+                                .Emit(op.Stfld, fields(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"stfld {fields(num)}")
-                        soo()
+                                Debug.WriteLine($"stfld {fields(num)}")
+                                soo()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("a"c) << 8) + AscW("f"c)
-                        .Emit(op.Ldflda, fields(num))
+                            Case (AscW("l"c) << 8 * 2) + (AscW("a"c) << 8) + AscW("f"c)
+                                .Emit(op.Ldflda, fields(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldflda {fields(num)}")
-                        sou(Of UIntPtr)()
+                                Debug.WriteLine($"ldflda {fields(num)}")
+                                sou(Of UIntPtr)()
 #End If
 
                         'Static field
-                    Case (AscW("l"c) << 8 * 2) + (AscW("s"c) << 8) + AscW("f"c)
-                        .Emit(op.Ldsfld, fields(num))
+                            Case (AscW("l"c) << 8 * 2) + (AscW("s"c) << 8) + AscW("f"c)
+                                .Emit(op.Ldsfld, fields(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldsfld {fields(num)}")
-                        su(fields(num).FieldType)
+                                Debug.WriteLine($"ldsfld {fields(num)}")
+                                su(fields(num).FieldType)
 #End If
-                    Case (AscW("s"c) << 8 * 2) + (AscW("s"c) << 8) + AscW("f"c)
-                        .Emit(op.Stsfld, fields(num))
+                            Case (AscW("s"c) << 8 * 2) + (AscW("s"c) << 8) + AscW("f"c)
+                                .Emit(op.Stsfld, fields(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"stsfld {fields(num)}")
-                        so()
+                                Debug.WriteLine($"stsfld {fields(num)}")
+                                so()
 #End If
-                    Case (AscW("l"c) << 8 * 3) + (AscW("a"c) << 8 * 2) + (AscW("s"c) << 8) + AscW("f"c)
-                        .Emit(op.Ldsflda, fields(num))
+                            Case (AscW("l"c) << 8 * 3) + (AscW("a"c) << 8 * 2) + (AscW("s"c) << 8) + AscW("f"c)
+                                .Emit(op.Ldsflda, fields(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldflda {fields(num)}")
-                        su(Of UIntPtr)()
+                                Debug.WriteLine($"ldflda {fields(num)}")
+                                su(Of UIntPtr)()
 #End If
 
                         'Array element
-                    Case (AscW("l"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("n"c)
-                        .Emit(op.Ldlen)
+                            Case (AscW("l"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("n"c)
+                                .Emit(op.Ldlen)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ldlen")
-                        sou(Of uint)()
+                                Debug.WriteLine("ldlen")
+                                sou(Of uint)()
 #End If
-                    Case (AscW("l"c) << 8 * 3) + (AscW("a"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("t"c)
-                        .Emit(op.Ldelema, types(num))
+                            Case (AscW("l"c) << 8 * 3) + (AscW("a"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("t"c)
+                                .Emit(op.Ldelema, types(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldlema {types(num)}")
-                        soou(Of UIntPtr)()
+                                Debug.WriteLine($"ldlema {types(num)}")
+                                soou(Of UIntPtr)()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("t"c)
-                        .Emit(op.Ldelem, types(num))
+                            Case (AscW("l"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("t"c)
+                                .Emit(op.Ldelem, types(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldlem {types(num)}")
-                        soou(types(num))
+                                Debug.WriteLine($"ldlem {types(num)}")
+                                soou(types(num))
 #End If
-                    Case (AscW("s"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("t"c)
-                        .Emit(op.Stelem, types(num))
+                            Case (AscW("s"c) << 8 * 2) + (AscW("e"c) << 8) + AscW("t"c)
+                                .Emit(op.Stelem, types(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"stlem {types(num)}")
-                        sox(3)
+                                Debug.WriteLine($"stlem {types(num)}")
+                                sox(3)
 #End If
 
                         'Object type
-                    Case (AscW("l"c) << 8 * 2) + (AscW("o"c) << 8) + AscW("t"c)
-                        .Emit(op.Ldobj, types(num))
+                            Case (AscW("l"c) << 8 * 2) + (AscW("o"c) << 8) + AscW("t"c)
+                                .Emit(op.Ldobj, types(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"ldobj {types(num).Name}")
-                        sou(types(num))
+                                Debug.WriteLine($"ldobj {types(num).Name}")
+                                sou(types(num))
 #End If
-                    Case (AscW("s"c) << 8 * 2) + (AscW("o"c) << 8) + AscW("t"c)
-                        .Emit(op.Stobj, types(num))
+                            Case (AscW("s"c) << 8 * 2) + (AscW("o"c) << 8) + AscW("t"c)
+                                .Emit(op.Stobj, types(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"stobj {types(num).Name}")
-                        soo()
+                                Debug.WriteLine($"stobj {types(num).Name}")
+                                soo()
 #End If
-                    Case (AscW("c"c) << 8 * 2) + (AscW("o"c) << 8) + AscW("t"c)
-                        .Emit(op.Castclass, types(num))
+                            Case (AscW("c"c) << 8 * 2) + (AscW("o"c) << 8) + AscW("t"c)
+                                .Emit(op.Castclass, types(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine($"castclass {types(num)}")
-                        sou(types(num))
+                                Debug.WriteLine($"castclass {types(num)}")
+                                sou(types(num))
 #End If
 
 #Region "Indirect"
-                    Case (AscW("l"c) << 8) + AscW("i"c)
-                        .Emit(op.Ldind_I)
+                            Case (AscW("l"c) << 8) + AscW("i"c)
+                                .Emit(op.Ldind_I)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ldind.i")
-                        sou(Of IntPtr)()
+                                Debug.WriteLine("ldind.i")
+                                sou(Of IntPtr)()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("1"c)
-                        .Emit(op.Ldind_I1)
+                            Case (AscW("l"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("1"c)
+                                .Emit(op.Ldind_I1)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ldind.i1")
-                        sou(Of SByte)()
+                                Debug.WriteLine("ldind.i1")
+                                sou(Of SByte)()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("2"c)
-                        .Emit(op.Ldind_I2)
+                            Case (AscW("l"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("2"c)
+                                .Emit(op.Ldind_I2)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ldind.i2")
-                        sou(Of Short)()
+                                Debug.WriteLine("ldind.i2")
+                                sou(Of Short)()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("4"c)
-                        .Emit(op.Ldind_I4)
+                            Case (AscW("l"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("4"c)
+                                .Emit(op.Ldind_I4)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ldind.i4")
-                        sou(Of Integer)()
+                                Debug.WriteLine("ldind.i4")
+                                sou(Of Integer)()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("8"c)
-                        .Emit(op.Ldind_I8)
+                            Case (AscW("l"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("8"c)
+                                .Emit(op.Ldind_I8)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ldind.i8")
-                        sou(Of Long)()
+                                Debug.WriteLine("ldind.i8")
+                                sou(Of Long)()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("r"c) << 8) + AscW("4"c)
-                        .Emit(op.Ldind_R4)
+                            Case (AscW("l"c) << 8 * 2) + (AscW("r"c) << 8) + AscW("4"c)
+                                .Emit(op.Ldind_R4)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ldind.r4")
-                        sou(Of Single)()
+                                Debug.WriteLine("ldind.r4")
+                                sou(Of Single)()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("r"c) << 8) + AscW("8"c)
-                        .Emit(op.Ldind_R8)
+                            Case (AscW("l"c) << 8 * 2) + (AscW("r"c) << 8) + AscW("8"c)
+                                .Emit(op.Ldind_R8)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ldind.r8")
-                        sou(Of Double)()
+                                Debug.WriteLine("ldind.r8")
+                                sou(Of Double)()
 #End If
-                    Case (AscW("l"c) << 8) + AscW("u"c)
-                        .Emit(op.Ldind_Ref)
+                            Case (AscW("l"c) << 8) + AscW("u"c)
+                                .Emit(op.Ldind_Ref)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ldind.ref")
-                        sou(Of UIntPtr)()
+                                Debug.WriteLine("ldind.ref")
+                                sou(Of UIntPtr)()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("1"c)
-                        .Emit(op.Ldind_U1)
+                            Case (AscW("l"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("1"c)
+                                .Emit(op.Ldind_U1)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ldind.u1")
-                        sou(Of Byte)()
+                                Debug.WriteLine("ldind.u1")
+                                sou(Of Byte)()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("2"c)
-                        .Emit(op.Ldind_U2)
+                            Case (AscW("l"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("2"c)
+                                .Emit(op.Ldind_U2)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ldind.u2")
-                        sou(Of UShort)()
+                                Debug.WriteLine("ldind.u2")
+                                sou(Of UShort)()
 #End If
-                    Case (AscW("l"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("4"c)
-                        .Emit(op.Ldind_U4)
+                            Case (AscW("l"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("4"c)
+                                .Emit(op.Ldind_U4)
 #If IL_DEBUG Then
-                        Debug.WriteLine("ldind.u4")
-                        sou(Of UInteger)()
+                                Debug.WriteLine("ldind.u4")
+                                sou(Of UInteger)()
 #End If
 
-                    Case (AscW("s"c) << 8) + AscW("i"c)
-                        .Emit(op.Stind_I)
+                            Case (AscW("s"c) << 8) + AscW("i"c)
+                                .Emit(op.Stind_I)
 #If IL_DEBUG Then
-                        Debug.WriteLine("stind.i")
-                        soo()
+                                Debug.WriteLine("stind.i")
+                                soo()
 #End If
-                    Case (AscW("s"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("1"c)
-                        .Emit(op.Stind_I1)
+                            Case (AscW("s"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("1"c)
+                                .Emit(op.Stind_I1)
 #If IL_DEBUG Then
-                        Debug.WriteLine("stind.i1")
-                        soo()
+                                Debug.WriteLine("stind.i1")
+                                soo()
 #End If
-                    Case (AscW("s"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("2"c)
-                        .Emit(op.Stind_I2)
+                            Case (AscW("s"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("2"c)
+                                .Emit(op.Stind_I2)
 #If IL_DEBUG Then
-                        Debug.WriteLine("stind.i2")
-                        soo()
+                                Debug.WriteLine("stind.i2")
+                                soo()
 #End If
-                    Case (AscW("s"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("4"c)
-                        .Emit(op.Stind_I4)
+                            Case (AscW("s"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("4"c)
+                                .Emit(op.Stind_I4)
 #If IL_DEBUG Then
-                        Debug.WriteLine("stind.4")
-                        soo()
+                                Debug.WriteLine("stind.4")
+                                soo()
 #End If
-                    Case (AscW("s"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("8"c)
-                        .Emit(op.Stind_I8)
+                            Case (AscW("s"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("8"c)
+                                .Emit(op.Stind_I8)
 #If IL_DEBUG Then
-                        Debug.WriteLine("stind.i8")
-                        soo()
+                                Debug.WriteLine("stind.i8")
+                                soo()
 #End If
-                    Case (AscW("s"c) << 8 * 2) + (AscW("r"c) << 8) + AscW("4"c)
-                        .Emit(op.Stind_R4)
+                            Case (AscW("s"c) << 8 * 2) + (AscW("r"c) << 8) + AscW("4"c)
+                                .Emit(op.Stind_R4)
 #If IL_DEBUG Then
-                        Debug.WriteLine("stind.r4")
-                        soo()
+                                Debug.WriteLine("stind.r4")
+                                soo()
 #End If
-                    Case (AscW("s"c) << 8 * 2) + (AscW("r"c) << 8) + AscW("8"c)
-                        .Emit(op.Stind_R8)
+                            Case (AscW("s"c) << 8 * 2) + (AscW("r"c) << 8) + AscW("8"c)
+                                .Emit(op.Stind_R8)
 #If IL_DEBUG Then
-                        Debug.WriteLine("stind.r8")
-                        soo()
+                                Debug.WriteLine("stind.r8")
+                                soo()
 #End If
-                    Case (AscW("s"c) << 8) + AscW("u"c)
-                        .Emit(op.Stind_Ref)
+                            Case (AscW("s"c) << 8) + AscW("u"c)
+                                .Emit(op.Stind_Ref)
 #If IL_DEBUG Then
-                        Debug.WriteLine("stind.ref")
-                        soo()
+                                Debug.WriteLine("stind.ref")
+                                soo()
 #End If
 #End Region
 
 #Region "Convert"
-                    Case (AscW("c"c) << 8) + AscW("i"c)
-                        .Emit(op.Conv_I)
+                            Case (AscW("c"c) << 8) + AscW("i"c)
+                                .Emit(op.Conv_I)
 #If IL_DEBUG Then
-                        Debug.WriteLine("conv.i")
-                        sou(Of IntPtr)()
+                                Debug.WriteLine("conv.i")
+                                sou(Of IntPtr)()
 #End If
-                    Case (AscW("c"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("1"c)
-                        .Emit(op.Conv_I1)
+                            Case (AscW("c"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("1"c)
+                                .Emit(op.Conv_I1)
 #If IL_DEBUG Then
-                        Debug.WriteLine("conv.i1")
-                        sou(Of SByte)()
+                                Debug.WriteLine("conv.i1")
+                                sou(Of SByte)()
 #End If
-                    Case (AscW("c"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("2"c)
-                        .Emit(op.Conv_I2)
+                            Case (AscW("c"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("2"c)
+                                .Emit(op.Conv_I2)
 #If IL_DEBUG Then
-                        Debug.WriteLine("conv.i2")
-                        sou(Of Short)()
+                                Debug.WriteLine("conv.i2")
+                                sou(Of Short)()
 #End If
-                    Case (AscW("c"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("4"c)
-                        .Emit(op.Conv_I4)
+                            Case (AscW("c"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("4"c)
+                                .Emit(op.Conv_I4)
 #If IL_DEBUG Then
-                        Debug.WriteLine("conv.i4")
-                        sou(Of Integer)()
+                                Debug.WriteLine("conv.i4")
+                                sou(Of Integer)()
 #End If
-                    Case (AscW("c"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("8"c)
-                        .Emit(op.Conv_I8)
+                            Case (AscW("c"c) << 8 * 2) + (AscW("i"c) << 8) + AscW("8"c)
+                                .Emit(op.Conv_I8)
 #If IL_DEBUG Then
-                        Debug.WriteLine("conv.i8")
-                        sou(Of Long)()
-#End If
-
-                    Case (AscW("c"c) << 8) + AscW("u"c)
-                        .Emit(op.Conv_U)
-#If IL_DEBUG Then
-                        Debug.WriteLine("conv.u")
-                        sou(Of UIntPtr)()
-#End If
-                    Case (AscW("c"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("1"c)
-                        .Emit(op.Conv_U1)
-#If IL_DEBUG Then
-                        Debug.WriteLine("conv.u1")
-                        sou(Of Byte)()
-#End If
-                    Case (AscW("c"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("2"c)
-                        .Emit(op.Conv_U2)
-#If IL_DEBUG Then
-                        Debug.WriteLine("conv.u2")
-                        sou(Of UShort)()
-#End If
-                    Case (AscW("c"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("4"c)
-                        .Emit(op.Conv_U4)
-#If IL_DEBUG Then
-                        Debug.WriteLine("conv.u4")
-                        sou(Of UInteger)()
-#End If
-                    Case (AscW("c"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("8"c)
-                        .Emit(op.Conv_U8)
-#If IL_DEBUG Then
-                        Debug.WriteLine("conv.u8")
-                        sou(Of ULong)()
+                                Debug.WriteLine("conv.i8")
+                                sou(Of Long)()
 #End If
 
-                    Case (AscW("c"c) << 8 * 2) + (AscW("r"c) << 8) + AscW("4"c)
-                        .Emit(op.Conv_R4)
+                            Case (AscW("c"c) << 8) + AscW("u"c)
+                                .Emit(op.Conv_U)
 #If IL_DEBUG Then
-                        Debug.WriteLine("conv.r4")
-                        sou(Of Single)()
+                                Debug.WriteLine("conv.u")
+                                sou(Of UIntPtr)()
 #End If
-                    Case (AscW("c"c) << 8 * 2) + (AscW("r"c) << 8) + AscW("8"c)
-                        .Emit(op.Conv_R8)
+                            Case (AscW("c"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("1"c)
+                                .Emit(op.Conv_U1)
 #If IL_DEBUG Then
-                        Debug.WriteLine("conv.r8")
-                        sou(Of Double)()
+                                Debug.WriteLine("conv.u1")
+                                sou(Of Byte)()
+#End If
+                            Case (AscW("c"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("2"c)
+                                .Emit(op.Conv_U2)
+#If IL_DEBUG Then
+                                Debug.WriteLine("conv.u2")
+                                sou(Of UShort)()
+#End If
+                            Case (AscW("c"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("4"c)
+                                .Emit(op.Conv_U4)
+#If IL_DEBUG Then
+                                Debug.WriteLine("conv.u4")
+                                sou(Of UInteger)()
+#End If
+                            Case (AscW("c"c) << 8 * 2) + (AscW("u"c) << 8) + AscW("8"c)
+                                .Emit(op.Conv_U8)
+#If IL_DEBUG Then
+                                Debug.WriteLine("conv.u8")
+                                sou(Of ULong)()
+#End If
+
+                            Case (AscW("c"c) << 8 * 2) + (AscW("r"c) << 8) + AscW("4"c)
+                                .Emit(op.Conv_R4)
+#If IL_DEBUG Then
+                                Debug.WriteLine("conv.r4")
+                                sou(Of Single)()
+#End If
+                            Case (AscW("c"c) << 8 * 2) + (AscW("r"c) << 8) + AscW("8"c)
+                                .Emit(op.Conv_R8)
+#If IL_DEBUG Then
+                                Debug.WriteLine("conv.r8")
+                                sou(Of Double)()
 #End If
 #End Region
 
@@ -1145,53 +1167,53 @@ Namespace ILS
                         '=======================
 
                         'Argument
-                    Case (AscW("c"c) << 8) + AscW("a"c)
-                        .Emit(op.Dup)
-                        .Emit(op.Starg_S, num)
+                            Case (AscW("c"c) << 8) + AscW("a"c)
+                                .Emit(op.Dup)
+                                .Emit(op.Starg_S, num)
 #If IL_DEBUG Then
-                        Debug.WriteLine("dup")
-                        Debug.WriteLine($"starg.s {num}")
+                                Debug.WriteLine("dup")
+                                Debug.WriteLine($"starg.s {num}")
 #End If
                         'Local variant
-                    Case (AscW("c"c) << 8) + AscW("o"c)
-                        .Emit(op.Dup)
-                        stloc()
+                            Case (AscW("c"c) << 8) + AscW("o"c)
+                                .Emit(op.Dup)
+                                stloc()
 #If IL_DEBUG Then
-                        Debug.WriteLine("dup")
-                        Debug.WriteLine($"stloc {num}")
+                                Debug.WriteLine("dup")
+                                Debug.WriteLine($"stloc {num}")
 #End If
                         'Static field
-                    Case (AscW("c"c) << 8 * 2) + (AscW("s"c) << 8) + AscW("f"c)
-                        .Emit(op.Dup)
-                        .Emit(op.Stsfld, fields(num))
+                            Case (AscW("c"c) << 8 * 2) + (AscW("s"c) << 8) + AscW("f"c)
+                                .Emit(op.Dup)
+                                .Emit(op.Stsfld, fields(num))
 #If IL_DEBUG Then
-                        Debug.WriteLine("dup")
-                        Debug.WriteLine($"stsfld {fields(num)}")
+                                Debug.WriteLine("dup")
+                                Debug.WriteLine($"stsfld {fields(num)}")
 #End If
 
                         'Define Field Type - register field member of type
-                    Case (AscW("d"c) << 8 * 2) + (AscW("f"c) << 8) + AscW("t"c)
-                        If fields Is Nothing Then
-                            fields = {types(num).GetField(word.ToString)}
-                        Else
-                            ReDim Preserve fields(fields.Length)
-                            fields(fields.Length - 1) = types(num).GetField(word.ToString)
-                        End If
+                            Case (AscW("d"c) << 8 * 2) + (AscW("f"c) << 8) + AscW("t"c)
+                                If fields Is Nothing Then
+                                    fields = {types(num).GetField(word.ToString)}
+                                Else
+                                    ReDim Preserve fields(fields.Length)
+                                    fields(fields.Length - 1) = types(num).GetField(word.ToString)
+                                End If
 
                     'Case (AscW("d"c) << 8 * 2) + (AscW("m"c) << 8) + AscW("t"c)
                     '    types(num).GetMethod(word.ToString)
 
 
                         'Define Local Type - declare local variant
-                    Case (AscW("d"c) << 8 * 2) + (AscW("o"c) << 8) + AscW("t"c)
-                        .DeclareLocal(types(num))
+                            Case (AscW("d"c) << 8 * 2) + (AscW("o"c) << 8) + AscW("t"c)
+                                .DeclareLocal(types(num))
 
-                        'cat.0
-                        'pointer 
+                                'cat.0
+                                'pointer 
 
-                    Case Else
-                        Throw New Exception("Unknow key : " & New reverser With {.n = key}.ToString)
-                End Select
+                            Case Else
+                                Throw New Exception("Unknow key : " & New reverser With {.n = key}.ToString)
+                        End Select
             End With
         End Sub
 
@@ -1213,7 +1235,7 @@ Namespace ILS
                     il.Emit(op.Stloc_2)
                 Case 3
                     il.Emit(op.Stloc_3)
-                Case Is < 256
+                Case 0 To 255
                     il.Emit(op.Stloc_S, num)
                 Case Is > 255
                     il.Emit(op.Stloc, num)
@@ -1231,7 +1253,7 @@ Namespace ILS
                     il.Emit(op.Ldloc_2)
                 Case 3
                     il.Emit(op.Ldloc_3)
-                Case Is < 256
+                Case 0 To 255
                     il.Emit(op.Ldloc_S, num)
                 Case Is > 255
                     il.Emit(op.Ldloc, num)
@@ -1249,7 +1271,7 @@ Namespace ILS
                     il.Emit(op.Ldarg_2)
                 Case 3
                     il.Emit(op.Ldarg_3)
-                Case Is < 256
+                Case 0 To 255
                     il.Emit(op.Ldarg_S, num)
                 Case Is > 255
                     il.Emit(op.Ldarg, num)
@@ -1277,9 +1299,7 @@ Namespace ILS
                     il.Emit(op.Ldc_I4_7)
                 Case 8
                     il.Emit(op.Ldc_I4_8)
-                Case Is < 128
-                    il.Emit(op.Ldc_I4_S, num)
-                Case Is > -129
+                Case -128 To 127
                     il.Emit(op.Ldc_I4_S, num)
                 Case Else
                     il.Emit(op.Ldc_I4, num)

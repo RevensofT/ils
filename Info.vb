@@ -32,7 +32,7 @@
     End Module
 End Namespace
 
-Namespace ILS.Info
+Namespace Info
     Public Structure [delegate](Of T As Class)
         Public Shared ReadOnly type As System.Type = GetType(T)
         Public Shared ReadOnly invoker As sr.MethodInfo = type.GetMethod("Invoke")
@@ -88,8 +88,8 @@ Namespace ILS.Info
         Public Shared ReadOnly pointer As System.Type = type.MakePointerType
         Public Shared ReadOnly by_ref As System.Type = type.MakeByRefType
         Public Shared ReadOnly ctors() As System.Reflection.ConstructorInfo = type.GetConstructors(sr.BindingFlags.Public Or
-                                                                                                  sr.BindingFlags.NonPublic Or
-                                                                                                  sr.BindingFlags.Instance)
+                                                                                                   sr.BindingFlags.NonPublic Or
+                                                                                                   sr.BindingFlags.Instance)
         Public Shared ReadOnly ctor As System.Reflection.ConstructorInfo = If(ctors.Length > 0, ctors(0), Nothing)
 
         <Method(inline)>
@@ -152,8 +152,9 @@ Namespace ILS.Info
         End Function
         <Method(inline)>
         Public Shared Function [new]() As System.Reflection.ConstructorInfo
-            [new] = type.GetConstructor({})
-            If [new] Is Nothing Then [new] = type.TypeInitializer
+            '[new] = type.GetConstructor({})
+            'If [new] Is Nothing Then [new] = type.TypeInitializer
+            Return If(type.GetConstructor({}), type.TypeInitializer)
         End Function
         <Method(inline)>
         Public Shared Function [new](Of T1)() As System.Reflection.ConstructorInfo
