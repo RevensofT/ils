@@ -11,9 +11,14 @@
     <Authors>Richter</Authors>
     <Company>RevensofT</Company>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>IL_DEBUG=True</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Import Include="int = System.Int64" />
     <Import Include="uint = System.UInt64" />
+    <Import Include="intp = System.IntPtr" />
+    <Import Include="uintp = System.UIntPtr" />
     <Import Include="Extension = System.Runtime.CompilerServices.ExtensionAttribute" />
     <Import Include="Method = System.Runtime.CompilerServices.MethodImplAttribute" />
     <Import Include="sre = System.Reflection.Emit" />
