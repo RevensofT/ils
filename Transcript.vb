@@ -93,11 +93,11 @@ Namespace ILS
         Friend il As cil
         Friend ReadOnly lbls As lbl
 
-        Friend news() As sr.ConstructorInfo
-        Friend uses() As sr.MethodInfo
-        Friend useds() As sr.MethodInfo
-        Friend fields() As sr.FieldInfo
-        Friend types() As System.Type
+        Friend news As List(Of sr.ConstructorInfo)
+        Friend uses As List(Of sr.MethodInfo)
+        Friend useds As List(Of sr.MethodInfo)
+        Friend fields As List(Of sr.FieldInfo)
+        Friend types As List(Of System.Type)
 
         Friend txts() As String
         Friend i4s() As Int32
@@ -120,6 +120,7 @@ Namespace ILS
 
 #If IL_DEBUG Then
         Public stack As Stack(Of Type)
+        Public revision As Dictionary(Of Integer, Type())
 #End If
 
         <Method(inline)>
@@ -143,6 +144,7 @@ Namespace ILS
             Debug.WriteLine(Code)
             Debug.WriteLine("===========================")
             stack = New Stack(Of Type)
+            revision = New Dictionary(Of Integer, Type())
 #End If
             If Collect_key IsNot Nothing Then be_collected = collector(Of T).items.ContainsKey(Collect_key)
 
@@ -152,7 +154,14 @@ Namespace ILS
                 Me.code = Code
                 lbls = New lbl
                 word = New Text.StringBuilder
-                useds = Info.delegate(Of T).invoke_param
+
+                news = New List(Of Reflection.ConstructorInfo)
+                uses = New List(Of Reflection.MethodInfo)
+                useds = New List(Of Reflection.MethodInfo)
+                fields = New List(Of Reflection.FieldInfo)
+                types = New List(Of Type)
+
+                useds.AddRange(Info.delegate(Of T).invoke_param)
             End If
         End Sub
     End Structure
@@ -177,6 +186,7 @@ Namespace ILS
 
 #If IL_DEBUG Then
             Dim Stack = Host.stack
+            Dim Revision = Host.revision
 #End If
             Select Case Host.key
 #Region "Constant"
@@ -341,53 +351,65 @@ Namespace ILS
                     Il.MarkLabel(Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"{Num}:")
+                    For Each Item In Revision(Num)
+                        Stack.su(Item)
+                    Next
 #End If
                 Case (AscW(":"c) << 8) + AscW(":"c)
                     Il.Emit(op.Br, Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"br {Num}")
+                    Revision(Num) = Stack.ToArray
 #End If
                 Case (AscW("t"c) << 8) + AscW(":"c)
                     Il.Emit(op.Brtrue, Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"brtrue {Num}")
                     Stack.so()
+                    Revision(Num) = Stack.ToArray
 #End If
                 Case (AscW("f"c) << 8) + AscW(":"c)
                     Il.Emit(op.Brfalse, Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"brfalse {Num}")
                     Stack.so()
+                    Revision(Num) = Stack.ToArray
 #End If
                 Case (AscW("="c) << 8) + AscW(":"c)
                     Il.Emit(op.Beq, Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"beq {Num}")
                     Stack.soo()
+                    Revision(Num) = Stack.ToArray
 #End If
                 Case (AscW(">"c) << 8) + AscW(":"c)
                     Il.Emit(op.Bgt, Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"bgt {Num}")
                     Stack.soo()
+                    Revision(Num) = Stack.ToArray
 #End If
                 Case (AscW("<"c) << 8) + AscW(":"c)
                     Il.Emit(op.Blt, Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"blt {Num}")
                     Stack.soo()
+                    Revision(Num) = Stack.ToArray
 #End If
                 Case (AscW(">"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c)
                     Il.Emit(op.Bge, Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"bge {Num}")
                     Stack.soo()
+                    Revision(Num) = Stack.ToArray
+                    'Debug.WriteLine($"write revision key {Num}")
 #End If
                 Case (AscW("<"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c)
                     Il.Emit(op.Ble, Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"ble {Num}")
                     Stack.soo()
+                    Revision(Num) = Stack.ToArray
 #End If
 
                 Case (AscW("!"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c)
@@ -395,30 +417,35 @@ Namespace ILS
 #If IL_DEBUG Then
                     Debug.WriteLine($"bne.un {Num}")
                     Stack.soo()
+                    Revision(Num) = Stack.ToArray
 #End If
                 Case (AscW("u"c) << 8 * 2) + (AscW(">"c) << 8) + AscW(":"c)
                     Il.Emit(op.Bgt_Un, Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"bgt.un {Num}")
                     Stack.soo()
+                    Revision(Num) = Stack.ToArray
 #End If
                 Case (AscW("u"c) << 8 * 2) + (AscW("<"c) << 8) + AscW(":"c)
                     Il.Emit(op.Blt_Un, Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"blt.un {Num}")
                     Stack.soo()
+                    Revision(Num) = Stack.ToArray
 #End If
                 Case (AscW("u"c) << 8 * 3) + (AscW(">"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c)
                     Il.Emit(op.Bge_Un, Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"bge.un {Num}")
                     Stack.soo()
+                    Revision(Num) = Stack.ToArray
 #End If
                 Case (AscW("u"c) << 8 * 3) + (AscW("<"c) << 8 * 2) + (AscW("="c) << 8) + AscW(":"c)
                     Il.Emit(op.Ble_Un, Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"ble.un {Num}")
                     Stack.soo()
+                    Revision(Num) = Stack.ToArray
 #End If
 #End Region
 
@@ -962,12 +989,13 @@ Namespace ILS
 #Region "Special"
                 'Define Field Type - register field member of type
                 Case (AscW("d"c) << 8 * 2) + (AscW("f"c) << 8) + AscW("t"c)
-                    If Fields Is Nothing Then
-                        Fields = {Types(Num).GetField(Host.word.ToString)}
-                    Else
-                        ReDim Preserve Fields(Fields.Length)
-                        Fields(Fields.Length - 1) = Types(Num).GetField(Host.word.ToString)
-                    End If
+                    Fields.Add(Types(Num).GetField(Host.word.ToString))
+                    'If Fields Is Nothing Then
+                    '    Fields = {Types(Num).GetField(Host.word.ToString)}
+                    'Else
+                    '    ReDim Preserve Fields(Fields.Length)
+                    '    Fields(Fields.Length - 1) = Types(Num).GetField(Host.word.ToString)
+                    'End If
 
                  'Case (AscW("d"c) << 8 * 2) + (AscW("m"c) << 8) + AscW("t"c)
                  '    types(num).GetMethod(word.ToString)
@@ -975,6 +1003,32 @@ Namespace ILS
                 'Define Local Type - declare local variant
                 Case (AscW("d"c) << 8 * 2) + (AscW("o"c) << 8) + AscW("t"c)
                     Il.DeclareLocal(Types(Num))
+
+                Case (AscW("r"c) << 8 * 3) + (AscW("e"c) << 8 * 2) + (AscW("g"c) << 8) + AscW("t"c)
+                    Dim Word = Host.word.ToString
+                    If Word Is Nothing Then
+                        Il.DeclareLocal(Types(Num))
+#If IL_DEBUG Then
+                        Debug.WriteLine("// Register local : " & Types(Num).ToString)
+#End If
+                    Else
+                        For Each Member In Types(Num).GetMember(Word)
+                            Select Case Member.MemberType
+                                Case Reflection.MemberTypes.Field
+                                    Fields.Add(Member)
+#If IL_DEBUG Then
+                                    Debug.WriteLine($"// Register field.{Fields.Count - 1} = {Types(Num)}.{Word} As {DirectCast(Member, sr.FieldInfo).FieldType }")
+#End If
+                                Case Reflection.MemberTypes.Method
+                                    Uses.Add(Member)
+#If IL_DEBUG Then
+                                    Debug.WriteLine($"// Register use.{Uses.Count - 1} = {Types(Num)}.{Word} As {DirectCast(Member, sr.MethodInfo) }")
+#End If
+                                Case Reflection.MemberTypes.Property
+                                Case Reflection.MemberTypes.Event
+                            End Select
+                        Next
+                    End If
 #End Region
 
 #Region "Extra"
@@ -1109,7 +1163,7 @@ Namespace ILS
 
     Friend Module Exten_ils_debug
         <Extension, Method(inline)>
-        Public Function jsk(Stack As Stack(Of Type)) As String
+        Public Function print(Stack As Stack(Of Type)) As String
             With New Text.StringBuilder
                 If Stack.Count > 0 Then
                     Do Until Stack.Count = 1
@@ -1124,7 +1178,7 @@ Namespace ILS
         <Extension, Method(inline)>
         Public Sub rmin(Stack As Stack(Of Type), Min As Int32)
             If Stack.Count < Min Then
-                Dim Message = $"Last operator request {Min} values on stack : {jsk(Stack)}"
+                Dim Message = $"Last operator request {Min} values on stack : {print(Stack)}"
                 Debug.WriteLine(Message)
                 Throw New Exception(Message)
             End If
@@ -1132,7 +1186,7 @@ Namespace ILS
         <Extension, Method(inline)>
         Public Sub rmax(Stack As Stack(Of Type), Max As Int32)
             If Stack.Count > Max Then
-                Dim Message = $"Value exceed limit {Max} values on stack to operate last operator : {{ {jsk(Stack)} }}"
+                Dim Message = $"Value exceed limit {Max} values on stack to operate last operator : {{ {print(Stack)} }}"
                 Debug.WriteLine(Message)
                 Throw New Exception(Message)
             End If
@@ -1235,19 +1289,22 @@ Namespace ILS
     Partial Public Module Exten_ils
         <Extension, Method(inline)>
         Public Function field(Of T As Class)(Host As ils(Of T), ParamArray Input() As sr.FieldInfo) As ils(Of T)
-            Host.fields = Input
+            'Host.fields = Input
+            Host.fields.AddRange(Input)
             Return Host
         End Function
 
         '''<summary>Can't use with express method.</summary>
         <Extension, Method(inline)>
         Public Function use(Of T As Class)(Host As ils(Of T), ParamArray Input() As sr.MethodInfo) As ils(Of T)
-            Host.uses = Input
+            'Host.uses = Input
+            Host.uses.AddRange(Input)
             Return Host
         End Function
         <Extension, Method(inline)>
         Public Function [new](Of T As Class)(Host As ils(Of T), ParamArray Input() As sr.ConstructorInfo) As ils(Of T)
-            Host.news = Input
+            'Host.news = Input
+            Host.news.AddRange(Input)
             Return Host
         End Function
         <Extension, Method(inline)>
@@ -1257,7 +1314,8 @@ Namespace ILS
         End Function
         <Extension, Method(inline)>
         Public Function type(Of T As Class)(Host As ils(Of T), ParamArray Input() As System.Type) As ils(Of T)
-            Host.types = Input
+            'Host.types = Input
+            Host.types.AddRange(Input)
             Return Host
         End Function
         Public Function i4(Of T As Class)(Host As ils(Of T), ParamArray Input() As Integer) As ils(Of T)
