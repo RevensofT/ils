@@ -44,6 +44,7 @@
         Public Function [sub_0](Script As String) As ils(Of Action)
             Return New ils(Of Action)(Script)
         End Function
+        <Extension, Method(inline)>
         Public Function [sub](Of T1)(Script As String) As ils(Of Action(Of T1))
             Return New ils(Of Action(Of T1))(Script)
         End Function

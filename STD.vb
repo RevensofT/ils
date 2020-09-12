@@ -26,7 +26,7 @@ Namespace Pre
         Shared cast As Func(Of T, V)
         <Method(inline)>
         Shared Sub New()
-            With Info.delegate(Of Func(Of T, V)).create_method 'New sre.DynamicMethod("", GetType(V), {GetType(T)})
+            With Info.delegate(Of Func(Of T, V)).create_method
                 incident(Of sre.OpCode).of(AddressOf .GetILGenerator.Emit)(op.Ldarg_0)(op.Ret).void
                 cast = DirectCast(.CreateDelegate(GetType(Func(Of T, V))), Object)
             End With

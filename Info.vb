@@ -1,4 +1,6 @@
-﻿Namespace ILS
+﻿Imports cil = System.Reflection.Emit.ILGenerator
+
+Namespace ILS
     Partial Friend Module Generate
         Friend Sub gen_get_type()
             Dim Listing = Function(SB As Text.StringBuilder, N As Integer, Body As Func(Of Integer, String))
@@ -56,6 +58,51 @@ Namespace Info
                                                                          Return .ToArray
                                                                      End With
                                                                  End Function()
+        <Method(inline)>
+        Public Shared Function create_calli(Method As T) As Action(Of cil)
+
+            Dim Meth = Method.as(Of [Delegate]).Method.CallingConvention
+
+            If Meth = 33 Then
+                Return Sub(IL As cil)
+                           Dim Field = Info.type(Of cil).field("m_ILStream")
+                           Dim B = Field.GetValue(IL)
+                           Dim D = BitConverter.ToString(B).Replace("-", "")
+                           IL.Emit(op.Ldc_I8, DirectCast(Info.type(Of System.Delegate).field("_methodPtr").
+                                              GetValue(Method), intp).ToInt64)
+                           B = Field.GetValue(IL)
+                           D = BitConverter.ToString(B).Replace("-", "")
+                           IL.EmitCalli(op.Calli, 4,
+                                        return_type, {GetType(Object)}.Concat(param_types).ToArray)
+                           B = Field.GetValue(IL)
+                           D = BitConverter.ToString(B).Replace("-", "")
+                       End Sub
+            Else
+                Return Sub(IL As cil)
+                           IL.Emit(op.Ldc_I8, DirectCast(Info.type(Of System.Delegate).field("_methodPtr").
+                                              GetValue(Method), intp).ToInt64)
+                           IL.EmitCalli(op.Calli, Meth,
+                                        return_type, param_types)
+                       End Sub
+            End If
+
+            ''"_methodPtr"
+            ''Dim Field As sr.FieldInfo = Info.type(Of System.Delegate).field("_methodPtr") '.field("_methodPtrAux")
+            'Dim Val = DirectCast(Info.type(Of System.Delegate).field("_methodPtrAux").
+            '                     GetValue(Method), intp).ToInt64
+            'If Val = 0 Then Val = DirectCast(Info.type(Of System.Delegate).field("_methodPtr").
+            '                                 GetValue(Method), intp).ToInt64
+
+            ''Method.as(Of System.Delegate).Method.CallingConvention
+            'Return Sub(IL As cil)
+            '           IL.Emit(op.Ldc_I8, Val)
+            '           'Dim M = New Action(Of sre.OpCode, sr.CallingConventions, Type, Type())(AddressOf IL.EmitCalli)
+            '           'M(op.Calli, Reflection.CallingConventions.HasThis Or Reflection.CallingConventions.VarArgs,
+            '           '            return_type, param_types)
+            '           IL.EmitCalli(op.Calli, 3,
+            '                       return_type, {GetType(Object), GetType(int)})
+            '       End Sub
+        End Function
 
         <Method(inline)>
         Public Shared Function create_method() As sre.DynamicMethod

@@ -6,7 +6,7 @@ Namespace ILS
     Public Module Builder
         <Extension, Method(inline)>
         Public Function compile(Of T As Class)(Script As String) As ils(Of T)
-            Return New ils(Of T)(Script, DirectCast(Nothing, String)) ', Info.delegate(Of T).create_method)
+            Return New ils(Of T)(Script, Info.delegate(Of T).create_method) 'DirectCast(Nothing, String)) ', 
         End Function
         <Extension, Method(inline)>
         Public Function compile(Of T As Class)(Script As String, Assembly_module As sr.Module) As ils(Of T)
@@ -84,7 +84,26 @@ Namespace ILS
         Key
         Num
         Gen
-        Word = 4
+        Word = &B100
+    End Enum
+
+
+    '"( la..1 >=? la.. . <( .1 , .2 ) + sa )"
+    ' stack(of label).push where ( then stack(of block).push(key == 0? block.loop, block.if)
+    ' op , error if stack(of label).pop is block.loop
+    ' stack(of block).pop where )
+    '// but do loop need to be promote ? jump or tail call should be better ?
+    '// and hell nest of if going to come along with this update.
+
+    ' switch.0.1.2.2.3.4 :0 .256 ::4 :1 128 ::4 :2 32 ::4 :3 -1 :4
+    '" ( .256 , .128 , .128 , la ? -1)"
+    ' ?.3 ( -1 , .256 , 128 , 32 )
+    ' ?.Count ( default , 0 , 1 , ... Count )
+    ' switch op
+    Friend Enum Con
+        dition  'if ... =( ... ); ... =( ... , ... )
+        tinue   'do ( ... =? .... )
+        junct   'switch ... ?.N ( ... , ... , ... )
     End Enum
 
     '''<typeparam name="T">T is type of delegate.</typeparam>
@@ -106,6 +125,7 @@ Namespace ILS
         Friend r8s() As Double
 
         Friend key As Int64, num As Int32
+        Friend label, switch As Int32
         Friend stat As Stat
         Friend ReadOnly word As Text.StringBuilder
 
@@ -351,9 +371,15 @@ Namespace ILS
                     Il.MarkLabel(Il._lbl(Lbls, Num))
 #If IL_DEBUG Then
                     Debug.WriteLine($"{Num}:")
-                    For Each Item In Revision(Num)
-                        Stack.su(Item)
-                    Next
+
+                    If Revision.ContainsKey(Num) Then
+                        Stack.Clear()
+                        For Each Item In Revision(Num)
+                            Stack.su(Item)
+                        Next
+                    Else
+                        Revision(Num) = Stack.ToArray
+                    End If
 #End If
                 Case (AscW(":"c) << 8) + AscW(":"c)
                     Il.Emit(op.Br, Il._lbl(Lbls, Num))
@@ -675,6 +701,13 @@ Namespace ILS
 #If IL_DEBUG Then
                     Stack.rexit(Meth)
 #End If
+'                Case (AscW("u"c) << 8 * 4) + (AscW("s"c) << 8 * 3) + (AscW("i"c) << 8 * 2) + (AscW("n"c) << 8) + AscW("g"c)
+'                    Il.Emit(op.Call, Host.useds(Num))
+'#If IL_DEBUG Then
+'                    Debug.WriteLine($"calli {Uses(Num)}")
+'                    Stack.soxu(Host.useds(Num).GetParameters.Length + 1,
+'                               Host.useds(Num).ReturnType)
+'#End If
                 'Invoke method
                 '[re] with [use] for recursion method
                 Case (AscW("r"c) << 8) + AscW("e"c) : Il.Emit(op.Tailcall)
@@ -1071,6 +1104,22 @@ Namespace ILS
                     Debug.WriteLine($"stsfld {Fields(Num)}")
 #End If
 #End Region
+
+#Region "Custom"
+                    'Case AscW(","c)
+                    '    Host.key = (AscW(":"c) << 8) + AscW(":"c)
+                    '    Host.num = Host.label
+                    '    Host._keygen
+
+                    '    Host.key = AscW(":"c)
+                    '    Host.num = Host.label + 1
+                    '    Host._keygen
+                    'Case AscW(")"c)
+                    '    Host.key = AscW(":"c)
+                    '    Host.num = Host.label
+                    '    Host._keygen
+#End Region
+
                 Case Else
                     Throw New Exception("Unknow key : " & reverser.to_string(Host.key))
             End Select
@@ -1133,6 +1182,82 @@ Namespace ILS
                 Case AscW(":"c)
                     Key = (Key << 8) + I
                     Stat = Stat.Num
+#Region "If/Do/Switch - Unsupport nesting"
+                    ' Auto generate label index in negative range.
+
+                Case AscW("?"c)
+                    If Key = 0 Then ' Process Switch if '?' is alone without compare op.
+                        Host.switch = Host.label - Num - 1
+                        Stat = Stat.Key
+                        Num = 0
+#If IL_DEBUG Then
+                        Host.stack.so
+                        With New List(Of sre.Label)
+                            For I = -Host.label + 1 To -Host.switch - 1
+                                .Add(Host.il._lbl(Host.lbls, -I))
+                                Host.revision(-I) = Host.stack.ToArray
+                            Next
+                            Host.il.Emit(op.Switch, .ToArray)
+                            Debug.WriteLine($"switch ({Host.label - 1} to {Host.switch})")
+                        End With
+#Else
+                    With New List(Of sre.Label)
+                        For I = -Host.label + 1 To -Host.switch - 1
+                            .Add(Host.il._lbl(Host.lbls, -I))
+                        Next
+                        Host.il.Emit(op.Switch, .ToArray)
+                    End With
+#End If
+                    Else ' Do loop
+                        Host.switch = Host.label - 1
+                        Key = (Key << 8) + AscW(":"c)
+                        Num = Host.switch
+                    End If
+                Case AscW("("c)
+                    ' [Choose] "[compare_op]( do_on_false , do_on_true )" => ?:N ... ::N+1 :N ... :N+1
+                    ' [If] "[compare_op]( do_on_false )" => ?:N ... :N
+                    ' [Do] "( ... [compare_op]? do_on_false_until_true )"
+                    ' [Switch] "key_index .[number_of_case]? default ( case_0 , case_1 , ... , case_n )"
+
+                    ' unsupport nest branch
+
+                    ' If Switch branch to exit. no effect on Do because ( write before ?
+                    If Host.switch < 0 Then
+                        Key = (AscW(":"c) << 8) + AscW(":"c)
+                        Num = Host.switch
+                        Host._keygen
+                        Key = 0
+                    End If
+
+                    Host.label -= 1
+                    Num = Host.label
+                    Key = (Key << 8) + AscW(":"c)
+
+                    If Host.switch < 0 Then Host.label -= 1
+
+                Case AscW(","c) ' Mainly for avoid fall through select/switch case, no use in Do. 
+                    Host.key = (AscW(":"c) << 8) + AscW(":"c)
+                    Host.num = If(Host.switch < 0, Host.switch, Host.label - 1)
+                    Host._keygen
+
+                    Host.key = AscW(":"c)
+                    Host.num = Host.label
+                    Host.label -= 1
+
+                Case AscW(")"c)
+                    ' Only happen on Do because Host.label equally with Host.switch on Switch.
+                    If Host.label > Host.switch Then
+                        Host.key = (AscW(":"c) << 8) + AscW(":"c)
+                        Host.num = Host.label
+                        Host._keygen
+
+                        Host.label = Host.switch
+                    End If
+
+                    Host.key = AscW(":"c)
+                    Host.num = Host.label
+                    Host.switch = 0
+#End Region
                 Case Else
                     Select Case State
                         Case Stat.Key
